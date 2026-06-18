@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* ── Fondos ── */
+  --color-background:                  #101319;
+  --color-surface:                     #101319;
+  --color-surface-container-lowest:    #0b0e13;
+  --color-surface-container-low:       #191c21;
+  --color-surface-container:           #1d2025;
+  --color-surface-container-high:      #272a30;
+  --color-surface-container-highest:   #32353b;
+  --color-surface-highlight:           #2a2d33;
+  --color-surface-variant:             #32353b;
+
+  /* ── TikiTaka brand ── */
+  --color-tikitaka-base:               #080B10;
+  --color-tikitaka-surface:            #111520;
+  --color-tikitaka-elevated:           #181D2E;
+  --color-tikitaka-gold:               #F5C518;
+
+  /* ── Primario — verde eléctrico ── */
+  --color-primary:                     #75ff9e;
+  --color-primary-container:           #00e676;
+  --color-primary-dim:                 #00e475;
+  --color-on-primary:                  #003918;
+
+  /* ── Secundario — dorado ── */
+  --color-secondary:                   #ffd65b;
+  --color-secondary-container:         #e7b900;
+
+  /* ── Texto ── */
+  --color-on-background:               #e1e2ea;
+  --color-on-surface:                  #e1e2ea;
+  --color-on-surface-variant:          #bacbb9;
+
+  /* ── Error ── */
+  --color-error:                       #ffb4ab;
+
+  /* ── Bordes ── */
+  --color-outline:                     #859585;
+  --color-outline-variant:             #3b4a3d;
+
+  /* ── Badges de posición ── */
+  --color-pos-arq: #3949AB;
+  --color-pos-def: #00695C;
+  --color-pos-med: #d32f2f;
+  --color-pos-del: #D4AF37;
+
+  /* ── Tipografía ── */
+  --font-sans: Inter, system-ui, sans-serif;
+}
+
+@layer components {
+  .badge-arq { background-color: #3949AB; color: white; }
+  .badge-def { background-color: #00695C; color: white; }
+  .badge-med { background-color: #d32f2f; color: white; }
+  .badge-del { background-color: #D4AF37; color: black; }
+
+  .glass-panel {
+    background: rgba(25, 28, 33, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+  }
+
+  .electric-glow {
+    box-shadow: 0 0 24px rgba(117, 255, 158, 0.3), 0 0 48px rgba(117, 255, 158, 0.1);
+  }
+
+  .glow-active {
+    box-shadow: 0 0 0 2px #75ff9e, 0 0 12px rgba(117, 255, 158, 0.35);
+  }
+
+  .surface-card {
+    background-color: #111520;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .pitch-bg {
+    background: linear-gradient(180deg, #1A3A1A 0%, #0F2D0F 100%);
+  }
+
+  .dark-scrollbar::-webkit-scrollbar       { width: 6px; }
+  .dark-scrollbar::-webkit-scrollbar-track { background: #080B10; }
+  .dark-scrollbar::-webkit-scrollbar-thumb { background: #32353b; border-radius: 4px; }
+  .dark-scrollbar::-webkit-scrollbar-thumb:hover { background: #4e5366; }
+
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+@layer utilities {
+  .text-display-lg  { font-size: 48px; line-height: 56px; letter-spacing: -0.02em; font-weight: 700; }
+  .text-headline-lg { font-size: 32px; line-height: 40px; letter-spacing: -0.01em; font-weight: 700; }
+  .text-title-md    { font-size: 20px; line-height: 28px; font-weight: 600; }
+  .text-body-lg     { font-size: 16px; line-height: 24px; }
+  .text-body-sm     { font-size: 14px; line-height: 20px; }
+  .text-label-caps  { font-size: 12px; line-height: 16px; letter-spacing: 0.05em; font-weight: 700; }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background-color: #101319;
+  color: #e1e2ea;
+  font-family: Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root { min-height: 100svh; }
