@@ -4,11 +4,11 @@ import Draft from './pages/Draft'
 import SimResult from './pages/SimResult'
 import Adventure from './pages/Adventure'
 import { simulateMatch } from './lib/simulation'
-import { getDailyChallenge, getAdventureRivals } from './lib/players'
+import { getDailyChallenge, getAdventureRivals, teamDisplayName } from './lib/players'
 import type { GameMode, Player, DailyChallenge, RivalTeam } from './types'
 import type { MatchResult } from './lib/simulation'
 
-type Screen = 'home' | 'draft' | 'sim-result' | 'adventure'
+type Screen = 'home' | 'draft' | 'sim-loading' | 'sim-result' | 'adventure'
 
 function dateSeed(): number {
   return new Date().toISOString().slice(0, 10).split('').reduce((a, c) => a + c.charCodeAt(0), 0)
@@ -34,7 +34,7 @@ export default function App() {
     if (mode === 'sim') {
       const result = simulateMatch(confirmedSquad, ch.rival, dateSeed())
       setSimResult(result)
-      setScreen('sim-result')
+      setScreen('sim-loading')
     } else {
       const rivals = getAdventureRivals(allPlayers)
       setAdventureRivals(rivals)
@@ -60,6 +60,15 @@ export default function App() {
         mode={mode}
         onBack={goHome}
         onConfirm={handleConfirm}
+      />
+    )
+  }
+
+  if (screen === 'sim-loading' && challenge) {
+    return (
+      <SimLoading
+        rival={challenge.rival}
+        onDone={() => setScreen('sim-result')}
       />
     )
   }
@@ -120,4 +129,45 @@ function DraftBridge({
   }
 
   return <Draft mode={mode} onBack={onBack} onConfirm={handleConfirm} />
+}
+
+function SimLoading({ rival, onDone }: { rival: RivalTeam; onDone: () => void }) {
+  useEffect(() => {
+    const id = setTimeout(onDone, 2200)
+    return () => clearTimeout(id)
+  }, [onDone])
+
+  return (
+    <div
+      className="h-svh flex flex-col items-center justify-center gap-6"
+      style={{ background: '#101319', maxWidth: '640px', margin: '0 auto', width: '100%' }}
+    >
+      <div style={{ animation: 'ball-bounce 0.7s ease-in-out infinite alternate', fontSize: '56px' }}>
+        ⚽
+      </div>
+      <div className="text-center">
+        <p className="text-label-caps text-[#75ff9e] tracking-widest mb-2">SIMULANDO PARTIDO</p>
+        <p className="text-body-lg text-[#e1e2ea]">vs {teamDisplayName(rival.name)}</p>
+      </div>
+      <div className="flex gap-1.5 mt-2">
+        {[0, 1, 2].map(i => (
+          <div
+            key={i}
+            className="w-2 h-2 rounded-full bg-[#75ff9e]"
+            style={{ animation: `dot-pulse 1.2s ease-in-out ${i * 0.2}s infinite` }}
+          />
+        ))}
+      </div>
+      <style>{`
+        @keyframes ball-bounce {
+          from { transform: translateY(0px); }
+          to   { transform: translateY(-18px); }
+        }
+        @keyframes dot-pulse {
+          0%, 100% { opacity: 0.2; transform: scale(0.8); }
+          50%       { opacity: 1;   transform: scale(1.2); }
+        }
+      `}</style>
+    </div>
+  )
 }

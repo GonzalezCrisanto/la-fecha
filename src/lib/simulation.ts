@@ -1,8 +1,10 @@
 import type { Player, RivalTeam } from '../types'
 
+export type EventType = 'goal' | 'save' | 'shot_off' | 'corner' | 'offside' | 'foul' | 'yellow'
+
 export interface MatchEvent {
   minute: number
-  type: 'goal' | 'yellow' | 'save'
+  type: EventType
   playerName: string
   side: 'home' | 'away'
 }
@@ -39,6 +41,10 @@ function weightedPick(players: Player[], rand: () => number): string {
     if (r <= 0) return pool[i].name
   }
   return pool[pool.length - 1].name
+}
+
+function randomPick(players: Player[], rand: () => number): string {
+  return players[Math.floor(rand() * players.length)]?.name ?? '?'
 }
 
 function poissonSample(lambda: number, rand: () => number): number {
@@ -84,6 +90,7 @@ export function simulateMatch(mySquad: Player[], rival: RivalTeam, seed: number)
 
   const events: MatchEvent[] = []
 
+  // Goals
   for (let i = 0; i < myGoals; i++) {
     events.push({ minute: pickMinute(), type: 'goal', playerName: weightedPick(mySquad, rand), side: 'home' })
   }
@@ -91,16 +98,34 @@ export function simulateMatch(mySquad: Player[], rival: RivalTeam, seed: number)
     events.push({ minute: pickMinute(), type: 'goal', playerName: weightedPick(rival.players, rand), side: 'away' })
   }
 
-  const yellowCount = 2 + Math.floor(rand() * 3)
+  // Non-goal attacks for each team: 3-5 each
+  const myExtraAttacks = 3 + Math.floor(rand() * 3)
+  const rivalExtraAttacks = 3 + Math.floor(rand() * 3)
+  const attackOutcomes: EventType[] = ['save', 'save', 'shot_off', 'shot_off', 'corner', 'offside']
+
+  for (let i = 0; i < myExtraAttacks; i++) {
+    const type = attackOutcomes[Math.floor(rand() * attackOutcomes.length)]
+    events.push({ minute: pickMinute(), type, playerName: weightedPick(mySquad, rand), side: 'home' })
+  }
+  for (let i = 0; i < rivalExtraAttacks; i++) {
+    const type = attackOutcomes[Math.floor(rand() * attackOutcomes.length)]
+    events.push({ minute: pickMinute(), type, playerName: weightedPick(rival.players, rand), side: 'away' })
+  }
+
+  // Fouls: 2-3 total, mixed between both teams
+  const foulCount = 2 + Math.floor(rand() * 2)
+  for (let i = 0; i < foulCount; i++) {
+    const side = rand() < 0.5 ? 'home' : 'away'
+    const pool = side === 'home' ? mySquad : rival.players
+    events.push({ minute: pickMinute(), type: 'foul', playerName: randomPick(pool, rand), side })
+  }
+
+  // Yellow cards: 1-2
+  const yellowCount = 1 + Math.floor(rand() * 2)
   for (let i = 0; i < yellowCount; i++) {
     const side = rand() < 0.5 ? 'home' : 'away'
     const pool = side === 'home' ? mySquad : rival.players
-    events.push({
-      minute: pickMinute(),
-      type: 'yellow',
-      playerName: pool[Math.floor(rand() * pool.length)].name,
-      side,
-    })
+    events.push({ minute: pickMinute(), type: 'yellow', playerName: randomPick(pool, rand), side })
   }
 
   events.sort((a, b) => a.minute - b.minute)
