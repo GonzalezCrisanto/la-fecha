@@ -65,6 +65,21 @@ export const MAX_PER_CLUB = 3
 
 const FORMATIONS: Formation[] = ['4-3-3', '4-4-2', '3-5-2', '4-2-3-1']
 
+export function getAdventureRivals(players: Player[], dateStr?: string): RivalTeam[] {
+  const date = dateStr ?? new Date().toISOString().slice(0, 10)
+  const seed = hashDate(date)
+  const teams = [...new Set(players.map(p => p.team))]
+  return [1, 2, 3].map(i => {
+    const s = seed + i * 31
+    const teamName = teams[s % teams.length]
+    return {
+      name: teamName,
+      players: buildRivalTeam(players, teamName, s),
+      formation: FORMATIONS[s % FORMATIONS.length],
+    }
+  })
+}
+
 function hashDate(date: string): number {
   return date.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
 }

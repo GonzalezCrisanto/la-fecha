@@ -17,9 +17,10 @@ const BADGE_CLASS: Record<Position, string> = {
 interface Props {
   mode: GameMode
   onBack: () => void
+  onConfirm: (squad: Player[]) => void
 }
 
-export default function Draft({ mode, onBack }: Props) {
+export default function Draft({ mode, onBack, onConfirm }: Props) {
   const [allPlayers, setAllPlayers] = useState<Player[]>([])
   const [challenge, setChallenge] = useState<DailyChallenge | null>(null)
   const [squad, setSquad] = useState<Player[]>([])
@@ -187,10 +188,11 @@ export default function Draft({ mode, onBack }: Props) {
       {isComplete && (
         <div className="shrink-0 px-4 py-4 border-t" style={{ background: '#1d2025', borderColor: '#3b4a3d' }}>
           <button
+            onClick={() => onConfirm(squad)}
             className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
             style={{ background: '#75ff9e', color: '#003918' }}
           >
-            {mode === 'sim' ? '⚡ Simular partido' : '🎮 Jugar aventura'}
+            {mode === 'sim' ? '⚡ Simular partido' : '🎮 Comenzar aventura'}
           </button>
         </div>
       )}
