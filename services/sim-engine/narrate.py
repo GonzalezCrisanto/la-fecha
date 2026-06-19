@@ -182,7 +182,7 @@ TYPE_TAG = {
 
 # ── Eventos sintéticos ────────────────────────────────────────────────────────
 
-def synthesize_extra_events(rep_match, rng):
+def synthesize_extra_events(rep_match, rng, start_minute=1, end_minute=90):
     """
     Genera eventos de atajadas y ocasiones erradas a partir de las stats del partido.
     No modifica el partido base; retorna lista de eventos adicionales.
@@ -192,8 +192,11 @@ def synthesize_extra_events(rep_match, rng):
     score_away  = rep_match["score_away"]
     used_mins   = {ev["minute"] for ev in rep_match.get("events", [])}
 
-    def free_minute(lo=5, hi=88):
-        """Minuto que no colisiona con eventos ya existentes."""
+    def free_minute(lo=None, hi=None):
+        """Minuto libre dentro del rango del período simulado."""
+        lo = max(start_minute, lo) if lo is not None else start_minute
+        hi = min(end_minute - 2, hi) if hi is not None else end_minute - 2
+        lo = min(lo, hi)
         for _ in range(20):
             m = rng.randint(lo, hi)
             if m not in used_mins:
@@ -312,33 +315,36 @@ def build_summary(rep_match, score_home, score_away, home_team, away_team):
 # ── Narración principal ────────────────────────────────────────────────────────
 
 def generate_narration(rep_match, home_team, away_team, seed=42,
-                       start_score_home=0, start_score_away=0):
+                       start_score_home=0, start_score_away=0,
+                       start_minute=1, end_minute=90):
     """
     Genera la lista de eventos narrados [{minuto, tipo, texto}].
     start_score_home/away: score del primer tiempo si narramos solo el segundo.
+    start_minute/end_minute: ventana del período simulado (46-90 para segundo tiempo).
     """
     rng = random.Random(seed)
 
-    # Eventos del motor + sintéticos
+    # Eventos del motor + sintéticos (respetan la ventana de tiempo)
     events = list(rep_match.get("events", []))
-    events += synthesize_extra_events(rep_match, rng)
+    events += synthesize_extra_events(rep_match, rng, start_minute, end_minute)
     events.sort(key=lambda e: e.get("minute", 0))
 
     sh, sa           = start_score_home, start_score_away
-    is_second_half   = start_score_home > 0 or start_score_away > 0
-    half_inserted    = is_second_half  # ya pasó el descanso si arrancamos en el ST
+    is_second_half   = start_minute > 1
+    half_inserted    = is_second_half  # el descanso ya ocurrió si arrancamos en el ST
     red_teams        = set()          # equipos con expulsados
     narration        = []
 
     def pick(template_key, **kwargs):
         return rng.choice(TEMPLATES[template_key]).format(**kwargs)
 
-    # ── Arranque ──────────────────────────────────────────────────────────────
-    narration.append({
-        "minuto": 0,
-        "tipo":   "arranque",
-        "texto":  pick("arranque", home_team=home_team, away_team=away_team),
-    })
+    # ── Arranque (solo primer tiempo) ─────────────────────────────────────────
+    if not is_second_half:
+        narration.append({
+            "minuto": 0,
+            "tipo":   "arranque",
+            "texto":  pick("arranque", home_team=home_team, away_team=away_team),
+        })
 
     for ev in events:
         minute  = ev.get("minute", 0)

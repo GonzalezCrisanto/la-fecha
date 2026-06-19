@@ -152,6 +152,8 @@ def simulate_second_half(match: SecondHalfInput):
             rep, match.home_team, match.away_team, seed=match.seed + 1,
             start_score_home=match.score_home,
             start_score_away=match.score_away,
+            start_minute=46,
+            end_minute=90,
         )
         narration_text = narration_to_text(
             narration_list, match.home_team, match.away_team, sh, sa
