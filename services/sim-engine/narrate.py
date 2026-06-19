@@ -375,13 +375,12 @@ def generate_narration(rep_match, home_team, away_team, seed=42):
                              scorer=scorer, min=minute,
                              home_team=home_team, away_team=away_team, sh=sh, sa=sa)
 
-            narration.append({"minuto": minute, "tipo": "gol", "texto": texto})
+            narration.append({"minuto": minute, "tipo": "gol", "texto": texto, "side": side, "player": scorer})
 
         elif ev_type == "yellow_card":
             player = ev.get("player", "")
             narration.append({
-                "minuto": minute,
-                "tipo":   "amarilla",
+                "minuto": minute, "tipo": "amarilla", "side": side, "player": player,
                 "texto":  pick("amarilla", player=player, team=team, min=minute),
             })
 
@@ -389,24 +388,21 @@ def generate_narration(rep_match, home_team, away_team, seed=42):
             player = ev.get("player", "")
             red_teams.add(side)
             narration.append({
-                "minuto": minute,
-                "tipo":   "roja",
+                "minuto": minute, "tipo": "roja", "side": side, "player": player,
                 "texto":  pick("roja", player=player, team=team, min=minute),
             })
 
         elif ev_type == "save":
             player = ev.get("player", "")
             narration.append({
-                "minuto": minute,
-                "tipo":   "atajada",
+                "minuto": minute, "tipo": "atajada", "side": side, "player": player,
                 "texto":  pick("save", player=player, min=minute),
             })
 
         elif ev_type == "bigChanceMissed":
             player = ev.get("player", "")
             narration.append({
-                "minuto": minute,
-                "tipo":   "ocasion_errada",
+                "minuto": minute, "tipo": "ocasion_errada", "side": side, "player": player,
                 "texto":  pick("bigChanceMissed", player=player, min=minute),
             })
 

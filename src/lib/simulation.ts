@@ -1,12 +1,15 @@
 import type { Player, RivalTeam } from '../types'
 
-export type EventType = 'goal' | 'save' | 'shot_off' | 'corner' | 'offside' | 'foul' | 'yellow'
+export type EventType =
+  | 'goal' | 'save' | 'shot_off' | 'corner' | 'offside' | 'foul' | 'yellow' | 'red'
+  | 'halftime' | 'fulltime' | 'motm'
 
 export interface MatchEvent {
   minute: number
   type: EventType
   playerName: string
   side: 'home' | 'away'
+  text?: string
 }
 
 export interface MatchResult {
@@ -258,10 +261,45 @@ interface EngineRepMatch {
   score_away: number
 }
 
+interface NarrationEvent {
+  minuto: number
+  tipo: string
+  texto: string
+  side?: 'home' | 'away'
+  player?: string
+}
+
 interface EngineResult {
   representative_match: EngineRepMatch | null
   avg_goals_home: number
   avg_goals_away: number
+  narration: NarrationEvent[] | null
+}
+
+const POS_FOUL_BASELINE: Record<string, number> = { ARQ: 0.1, DEF: 0.9, MED: 1.1, DEL: 1.3 }
+
+function toEnginePlayer(p: Player) {
+  const seasonMins = Math.max(p.minutes, 90)
+  const goals90    = (p.goals   / seasonMins) * 90
+  const assists90  = (p.assists / seasonMins) * 90
+  // Reverse-engineer fouls from yellow cards (LPF avg: 1 yellow ≈ 3.6 fouls)
+  const fouls90 = p.yellowCards > 0
+    ? Math.max((p.yellowCards / seasonMins) * 90 / 0.28, 0.1)
+    : POS_FOUL_BASELINE[p.position] ?? 1.0
+  // Map overall (60–100 typical) → match rating (6.0–8.0)
+  const ratingMean = Math.max(5.5, Math.min(8.5, 6.0 + (p.overall - 65) / 35 * 2.0))
+
+  return {
+    id:                    null,
+    name:                  p.name,
+    position:              p.position,
+    minutes:               90,
+    goals_per_90_shrunk:   Math.max(goals90, 0.001),
+    assists_per_90_shrunk: Math.max(assists90, 0.001),
+    fouls_per_90:          fouls90,
+    rating_mean:           ratingMean,
+    rating_std:            0.6,
+  }
 }
 
 export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: number): Promise<MatchResult> {
@@ -273,8 +311,8 @@ export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: n
     away_team: rival.name,
     tactics_home: { formation: null, mentality: 'equilibrada', intensity: 'media', captain_id: null },
     tactics_away: { formation: rival.formation ?? null, mentality: 'equilibrada', intensity: 'media', captain_id: null },
-    home: mySquad.map(p => ({ id: null, name: p.name, position: p.position, minutes: Math.max(p.minutes, 1) })),
-    away: rival.players.map(p => ({ id: null, name: p.name, position: p.position, minutes: Math.max(p.minutes, 1) })),
+    home: mySquad.map(toEnginePlayer),
+    away: rival.players.map(toEnginePlayer),
     n_sims: 5000,
     seed,
   }
@@ -288,24 +326,41 @@ export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: n
   if (!res.ok) throw new Error(`Motor: ${res.status} ${await res.text()}`)
 
   const data = await res.json() as EngineResult
+  console.log('[SimEngine] Response:', {
+    score: `${data.representative_match?.score_home ?? '?'}-${data.representative_match?.score_away ?? '?'}`,
+    avg_goals: `${data.avg_goals_home.toFixed(2)}-${data.avg_goals_away.toFixed(2)}`,
+    events: data.representative_match?.events?.length ?? 0,
+  })
   const rep = data.representative_match
 
   const myGoals    = rep?.score_home ?? Math.round(data.avg_goals_home)
   const rivalGoals = rep?.score_away ?? Math.round(data.avg_goals_away)
 
-  const engineEvents = (rep?.events ?? [])
-    .map(e => ({
-      minute:     e.minute,
-      type:       ({ goal: 'goal', yellow_card: 'yellow', red_card: 'foul' } as Record<string, EventType>)[e.type] ?? 'foul',
-      playerName: e.player,
-      side:       e.side,
-    } as MatchEvent))
-    .sort((a, b) => a.minute - b.minute)
+  const TIPO_MAP: Record<string, EventType> = {
+    gol:            'goal',
+    amarilla:       'yellow',
+    roja:           'red',
+    atajada:        'save',
+    ocasion_errada: 'shot_off',
+    entretiempo:    'halftime',
+    pitazo_final:   'fulltime',
+    figura:         'motm',
+  }
+
+  const events: MatchEvent[] = (data.narration ?? [])
+    .filter(n => TIPO_MAP[n.tipo])
+    .map(n => ({
+      minute:     n.minuto,
+      type:       TIPO_MAP[n.tipo],
+      playerName: n.player ?? '',
+      side:       n.side ?? 'home',
+      text:       n.texto,
+    }))
 
   return {
     myGoals,
     rivalGoals,
-    events:       engineEvents,
+    events,
     myOverall:    Math.round(avgOverall(mySquad)),
     rivalOverall: Math.round(avgOverall(rival.players)),
   }

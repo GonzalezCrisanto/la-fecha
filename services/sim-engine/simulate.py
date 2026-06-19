@@ -223,6 +223,24 @@ def get_player_profile(player_id, position, generic=False):
     }
 
 
+def resolve_profile(player: dict) -> dict:
+    """
+    Resolves the player profile and merges any per-90 stats provided directly
+    on the player dict (e.g. from a client that computed them from season data).
+    Provided fields take precedence over priors.
+    """
+    pos     = player["position"]
+    generic = player.get("generic", False)
+    base    = get_player_profile(player.get("id"), pos, generic)
+
+    overrides = {}
+    for key in ("goals_per_90_shrunk", "assists_per_90_shrunk", "fouls_per_90", "rating_mean", "rating_std"):
+        if key in player:
+            overrides[key] = player[key]
+
+    return {**base, **overrides} if overrides else base
+
+
 # ── Multiplicadores tácticos ──────────────────────────────────────────────────
 
 def _formation_mult(tactics):
@@ -255,10 +273,7 @@ def compute_team_xg(lineup, own_team, opp_team, is_home,
     opp_tactics = opp_tactics or {}
     consts = get_constants()
 
-    raw_xg = sum(
-        get_player_profile(p.get("id"), p["position"], p.get("generic", False))["goals_per_90_shrunk"]
-        for p in lineup
-    )
+    raw_xg = sum(resolve_profile(p)["goals_per_90_shrunk"] for p in lineup)
 
     team_strengths = consts.get("team_strengths", {})
     own_atk = team_strengths.get(own_team, {}).get("attack_strength",  1.0)
@@ -357,7 +372,7 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
 
         for player in lineup:
             pos     = player["position"]
-            profile = get_player_profile(player.get("id"), pos, player.get("generic", False))
+            profile = resolve_profile(player)
             mins    = player.get("minutes", 90)
 
             fouls_rate = profile.get("fouls_per_90", profile["fouls_per_match"])
@@ -404,8 +419,7 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
 
     # ── 4. Distribución de goles entre jugadores (correlacionada) ─────────────
     def goal_weights(lineup):
-        return [get_player_profile(p.get("id"), p["position"], p.get("generic", False))["goals_per_90_shrunk"]
-                for p in lineup]
+        return [resolve_profile(p)["goals_per_90_shrunk"] for p in lineup]
 
     home_goal_w  = goal_weights(home_lineup)
     away_goal_w  = goal_weights(away_lineup)
@@ -413,8 +427,7 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
     away_goal_dist = multinomial_choice(total_away, away_goal_w)
 
     def asst_weights(lineup):
-        return [get_player_profile(p.get("id"), p["position"], p.get("generic", False))["assists_per_90_shrunk"]
-                for p in lineup]
+        return [resolve_profile(p)["assists_per_90_shrunk"] for p in lineup]
 
     home_asst_w = asst_weights(home_lineup)
     away_asst_w = asst_weights(away_lineup)
@@ -469,7 +482,7 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
 
         for i, (player, goals) in enumerate(zip(lineup, goal_dist)):
             pos     = player["position"]
-            profile = get_player_profile(player.get("id"), pos, player.get("generic", False))
+            profile = resolve_profile(player)
             mins    = player.get("minutes", 90)
             yellow, red, red_min, fouls = cards[i]
 

@@ -27,8 +27,13 @@ app.add_middleware(
 class PlayerInput(BaseModel):
     id: Optional[int] = None
     name: str
-    position: str   # ARQ | DEF | MED | DEL
+    position: str          # ARQ | DEF | MED | DEL
     minutes: int = 90
+    goals_per_90_shrunk:   Optional[float] = None
+    assists_per_90_shrunk: Optional[float] = None
+    fouls_per_90:          Optional[float] = None
+    rating_mean:           Optional[float] = None
+    rating_std:            Optional[float] = None
 
 class Tactics(BaseModel):
     formation: Optional[str] = None
@@ -60,7 +65,7 @@ def simulate(match: MatchInput):
     random.seed(match.seed)
 
     def to_player(p: PlayerInput) -> dict:
-        d = p.model_dump()
+        d = {k: v for k, v in p.model_dump().items() if v is not None}
         if d.get("id") is None:
             d["generic"] = True
         return d

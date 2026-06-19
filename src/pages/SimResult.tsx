@@ -179,46 +179,66 @@ export default function SimResult({ result, rival, remainingAttempts, onBack, on
 }
 
 const EVENT_META: Record<EventType, { icon: string; label: (player: string, isHome: boolean) => string; highlight: string }> = {
-  goal:     { icon: '⚽', label: (p)        => `¡GOL de ${p}!`,                highlight: '#75ff9e44' },
-  save:     { icon: '🧤', label: (p)        => `Tiro de ${p}, atajada`,         highlight: '#272a30'   },
-  shot_off: { icon: '💨', label: (p)        => `${p} tira afuera`,              highlight: '#272a30'   },
-  corner:   { icon: '🚩', label: (p)        => `Córner — ataque de ${p}`,       highlight: '#272a30'   },
-  offside:  { icon: '🏃', label: (p)        => `${p} en offside`,               highlight: '#272a30'   },
-  foul:     { icon: '⚠️', label: (p)        => `Falta de ${p}`,                highlight: '#272a30'   },
-  yellow:   { icon: '🟨', label: (p)        => `Amarilla para ${p}`,            highlight: '#272a30'   },
+  goal:     { icon: '⚽', label: (p)  => `¡GOL de ${p}!`,          highlight: '#75ff9e44' },
+  save:     { icon: '🧤', label: (p)  => `Atajada de ${p}`,         highlight: '#1a2a3a'   },
+  shot_off: { icon: '💨', label: (p)  => `${p} tira afuera`,        highlight: '#272a30'   },
+  corner:   { icon: '🚩', label: (p)  => `Córner — ataque de ${p}`, highlight: '#272a30'   },
+  offside:  { icon: '🏃', label: (p)  => `${p} en offside`,         highlight: '#272a30'   },
+  foul:     { icon: '⚠️', label: (p)  => `Falta de ${p}`,          highlight: '#272a30'   },
+  yellow:   { icon: '🟨', label: (p)  => `Amarilla para ${p}`,      highlight: '#2a2500'   },
+  red:      { icon: '🟥', label: (p)  => `¡Expulsado! ${p}`,        highlight: '#3a0a0a'   },
+  halftime: { icon: '⏸',  label: ()   => 'Fin del primer tiempo',   highlight: '#1d2025'   },
+  fulltime: { icon: '🏁', label: ()   => 'Pitazo final',            highlight: '#1d2025'   },
+  motm:     { icon: '⭐', label: (p)  => `Figura: ${p}`,            highlight: '#2a2500'   },
 }
 
 function EventRow({ event, isNew }: { event: MatchEvent; isNew: boolean }) {
-  const isHome = event.side === 'home'
-  const meta = EVENT_META[event.type]
-  const isGoal = event.type === 'goal'
+  const isHome   = event.side === 'home'
+  const meta     = EVENT_META[event.type]
+  const isGoal   = event.type === 'goal'
+  const isGlobal = event.type === 'halftime' || event.type === 'fulltime' || event.type === 'motm'
+
+  const minuteLabel = event.type === 'halftime' ? "45'" : event.type === 'fulltime' ? "90'" : `${event.minute}'`
 
   return (
     <div
-      className="flex items-center gap-3 p-3 rounded-xl"
+      className="flex items-start gap-3 p-3 rounded-xl"
       style={{
-        background: '#1d2025',
+        background: isGlobal ? '#151a1e' : '#1d2025',
         border: `1px solid ${isNew ? meta.highlight : '#272a30'}`,
         animation: isNew ? 'event-in 0.3s ease-out' : undefined,
       }}
     >
-      <span className="text-label-caps text-[#859585] w-8 text-right shrink-0">
-        {event.minute}'
+      <span className="text-label-caps text-[#859585] w-8 text-right shrink-0 mt-0.5">
+        {minuteLabel}
       </span>
-      <span className="text-base shrink-0">{meta.icon}</span>
+      <span className="text-base shrink-0 mt-0.5">{meta.icon}</span>
       <div className="flex-1 min-w-0">
-        <p
-          className={`text-body-sm font-semibold truncate ${
+        {event.text ? (
+          <p className={`text-body-sm leading-snug ${
             isGoal
-              ? isHome ? 'text-[#75ff9e]' : 'text-[#ffb4ab]'
-              : isHome ? 'text-[#e1e2ea]' : 'text-[#bacbb9]'
-          }`}
-        >
-          {meta.label(event.playerName, isHome)}
-        </p>
-        <p className="text-label-caps text-[#859585]">
-          {isHome ? 'Tu equipo' : 'Rival'}
-        </p>
+              ? isHome ? 'text-[#75ff9e] font-semibold' : 'text-[#ffb4ab] font-semibold'
+              : isGlobal ? 'text-[#859585] italic'
+              : 'text-[#e1e2ea]'
+          }`}>
+            {event.text}
+          </p>
+        ) : (
+          <>
+            <p className={`text-body-sm font-semibold truncate ${
+              isGoal
+                ? isHome ? 'text-[#75ff9e]' : 'text-[#ffb4ab]'
+                : isHome ? 'text-[#e1e2ea]' : 'text-[#bacbb9]'
+            }`}>
+              {meta.label(event.playerName, isHome)}
+            </p>
+            {!isGlobal && (
+              <p className="text-label-caps text-[#859585]">
+                {isHome ? 'Tu equipo' : 'Rival'}
+              </p>
+            )}
+          </>
+        )}
       </div>
     </div>
   )
