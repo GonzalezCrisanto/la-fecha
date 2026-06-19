@@ -3,6 +3,7 @@ import Home from './pages/Home'
 import Draft from './pages/Draft'
 import SimResult from './pages/SimResult'
 import Adventure from './pages/Adventure'
+import PenaltyShootout from './pages/PenaltyShootout'
 import { StrategyPicker } from './pages/Adventure'
 import { simulateMatch, callSimEngine } from './lib/simulation'
 import { getDailyChallenge, getAdventureRivals, teamDisplayName } from './lib/players'
@@ -12,7 +13,7 @@ import type { GameMode, Player, DailyChallenge, RivalTeam } from './types'
 import type { MatchResult } from './lib/simulation'
 import type { GameStrategy } from './lib/adventure'
 
-type Screen = 'home' | 'draft' | 'sim-strategy' | 'sim-loading' | 'sim-result' | 'adventure'
+type Screen = 'home' | 'draft' | 'sim-strategy' | 'sim-loading' | 'sim-result' | 'adventure' | 'penalty'
 
 function dateSeed(): number {
   return new Date().toISOString().slice(0, 10).split('').reduce((a, c) => a + c.charCodeAt(0), 0)
@@ -111,6 +112,18 @@ export default function App() {
         remainingAttempts={simAttempts}
         onBack={goHome}
         onReplay={replay}
+        onPenalties={() => setScreen('penalty')}
+      />
+    )
+  }
+
+  if (screen === 'penalty' && challenge) {
+    return (
+      <PenaltyShootout
+        squad={squad}
+        rival={challenge.rival}
+        seed={dateSeed()}
+        onBack={goHome}
       />
     )
   }

@@ -16,11 +16,12 @@ interface Props {
   remainingAttempts: number
   onBack: () => void
   onReplay: () => void
+  onPenalties?: () => void
 }
 
 type Phase = 'first' | 'halftime-break' | 'loading-second-half' | 'second'
 
-export default function SimResult({ result, rival, squad, seed, initialStrategy, remainingAttempts, onBack, onReplay }: Props) {
+export default function SimResult({ result, rival, squad, seed, initialStrategy, remainingAttempts, onBack, onReplay, onPenalties }: Props) {
   const [allEvents, setAllEvents] = useState(result.events)
   const [visibleCount, setVisibleCount] = useState(0)
   const [phase, setPhase] = useState<Phase>('first')
@@ -233,6 +234,15 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
           className="shrink-0 px-4 py-4 border-t flex flex-col gap-2"
           style={{ background: '#1d2025', borderColor: '#3b4a3d' }}
         >
+          {drew && onPenalties && (
+            <button
+              onClick={onPenalties}
+              className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
+              style={{ background: '#ffde6e', color: '#2a1f00' }}
+            >
+              🥅 Ir a penales →
+            </button>
+          )}
           {remainingAttempts > 0 ? (
             <button
               onClick={onReplay}
