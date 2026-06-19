@@ -105,6 +105,9 @@ export default function App() {
       <SimResult
         result={simResult}
         rival={challenge.rival}
+        squad={squad}
+        seed={dateSeed()}
+        initialStrategy={simStrategy}
         remainingAttempts={simAttempts}
         onBack={goHome}
         onReplay={replay}

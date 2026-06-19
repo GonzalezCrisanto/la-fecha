@@ -333,11 +333,6 @@ export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: n
   if (!res.ok) throw new Error(`Motor: ${res.status} ${await res.text()}`)
 
   const data = await res.json() as EngineResult
-  console.log('[SimEngine] Response:', {
-    score: `${data.representative_match?.score_home ?? '?'}-${data.representative_match?.score_away ?? '?'}`,
-    avg_goals: `${data.avg_goals_home.toFixed(2)}-${data.avg_goals_away.toFixed(2)}`,
-    events: data.representative_match?.events?.length ?? 0,
-  })
   const rep = data.representative_match
 
   const myGoals    = rep?.score_home ?? Math.round(data.avg_goals_home)
@@ -371,4 +366,55 @@ export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: n
     myOverall:    Math.round(avgOverall(mySquad)),
     rivalOverall: Math.round(avgOverall(rival.players)),
   }
+}
+
+export async function callSimEngineSecondHalf(
+  mySquad: Player[],
+  rival: RivalTeam,
+  seed: number,
+  strategy: string,
+  scoreHome: number,
+  scoreAway: number,
+): Promise<MatchEvent[]> {
+  const url = (import.meta.env.VITE_SIM_ENGINE_URL as string | undefined)?.replace(/\/$/, '')
+  if (!url) throw new Error('VITE_SIM_ENGINE_URL no configurada')
+
+  const body = {
+    home_team: 'Tu Equipo',
+    away_team: rival.name,
+    tactics_home: { formation: null, mentality: STRATEGY_MENTALITY[strategy] ?? 'equilibrada', intensity: 'media', captain_id: null },
+    tactics_away: { formation: rival.formation ?? null, mentality: 'equilibrada', intensity: 'media', captain_id: null },
+    home: mySquad.map(toEnginePlayer),
+    away: rival.players.map(toEnginePlayer),
+    n_sims: 5000,
+    seed,
+    score_home: scoreHome,
+    score_away: scoreAway,
+  }
+
+  const res = await fetch(`${url}/simulate-second-half`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+  if (!res.ok) throw new Error(`Motor: ${res.status} ${await res.text()}`)
+
+  const data = await res.json() as EngineResult
+
+  const TIPO_MAP: Record<string, EventType> = {
+    gol: 'goal', amarilla: 'yellow', roja: 'red',
+    atajada: 'save', ocasion_errada: 'shot_off',
+    entretiempo: 'halftime', pitazo_final: 'fulltime', figura: 'motm',
+  }
+
+  return (data.narration ?? [])
+    .filter(n => TIPO_MAP[n.tipo])
+    .map(n => ({
+      minute: n.minuto,
+      type: TIPO_MAP[n.tipo],
+      playerName: n.player ?? '',
+      side: n.side ?? 'home',
+      text: n.texto,
+    }))
 }
