@@ -57,10 +57,18 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
     if (halfStrategy !== initialStrategy) {
       setPhase('loading-second-half')
       try {
-        const secondHalfEvents = await callSimEngineSecondHalf(
-          squad, rival, seed, halfStrategy, htScore.home, htScore.away
-        )
         const firstHalfEvents = allEvents.slice(0, visibleCount)
+        const bookedHome = firstHalfEvents
+          .filter(e => e.type === 'yellow' && e.side === 'home')
+          .map(e => e.playerName)
+        const bookedAway = firstHalfEvents
+          .filter(e => e.type === 'yellow' && e.side === 'away')
+          .map(e => e.playerName)
+        const secondHalfEvents = await callSimEngineSecondHalf(
+          squad, rival, seed, halfStrategy,
+          htScore.home, htScore.away,
+          bookedHome, bookedAway,
+        )
         setAllEvents([...firstHalfEvents, ...secondHalfEvents])
       } catch {
         // continue with existing events on error
@@ -279,8 +287,9 @@ const EVENT_META: Record<EventType, { icon: string; label: (player: string, isHo
   corner:   { icon: '🚩', label: (p)  => `Córner — ataque de ${p}`, highlight: '#272a30'   },
   offside:  { icon: '🏃', label: (p)  => `${p} en offside`,         highlight: '#272a30'   },
   foul:     { icon: '⚠️', label: (p)  => `Falta de ${p}`,          highlight: '#272a30'   },
-  yellow:   { icon: '🟨', label: (p)  => `Amarilla para ${p}`,      highlight: '#2a2500'   },
-  red:      { icon: '🟥', label: (p)  => `¡Expulsado! ${p}`,        highlight: '#3a0a0a'   },
+  yellow:        { icon: '🟨',    label: (p) => `Amarilla para ${p}`,       highlight: '#2a2500' },
+  double_yellow: { icon: '🟨🟥', label: (p) => `¡Doble amarilla! ${p}`,    highlight: '#3a0a0a' },
+  red:           { icon: '🟥',    label: (p) => `¡Expulsado! ${p}`,        highlight: '#3a0a0a' },
   halftime: { icon: '⏸',  label: ()   => 'Fin del primer tiempo',   highlight: '#1d2025'   },
   fulltime: { icon: '🏁', label: ()   => 'Pitazo final',            highlight: '#1d2025'   },
   motm:     { icon: '⭐', label: (p)  => `Figura: ${p}`,            highlight: '#2a2500'   },

@@ -54,6 +54,8 @@ class MatchInput(BaseModel):
 class SecondHalfInput(MatchInput):
     score_home: int = 0
     score_away: int = 0
+    booked_home: list[str] = []
+    booked_away: list[str] = []
 
 
 # ── Endpoints ──────────────────────────────────────────────────────────────────
@@ -137,6 +139,8 @@ def simulate_second_half(match: SecondHalfInput):
         n_sims=match.n_sims,
         start_minute=46,
         end_minute=90,
+        booked_home=match.booked_home,
+        booked_away=match.booked_away,
     )
 
     rep = result.get("representative_match")

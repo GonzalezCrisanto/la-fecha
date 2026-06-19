@@ -1,7 +1,7 @@
 import type { Player, RivalTeam } from '../types'
 
 export type EventType =
-  | 'goal' | 'save' | 'shot_off' | 'corner' | 'offside' | 'foul' | 'yellow' | 'red'
+  | 'goal' | 'save' | 'shot_off' | 'corner' | 'offside' | 'foul' | 'yellow' | 'red' | 'double_yellow'
   | 'halftime' | 'fulltime' | 'motm'
 
 export interface MatchEvent {
@@ -375,6 +375,8 @@ export async function callSimEngineSecondHalf(
   strategy: string,
   scoreHome: number,
   scoreAway: number,
+  bookedHome: string[],
+  bookedAway: string[],
 ): Promise<MatchEvent[]> {
   const url = (import.meta.env.VITE_SIM_ENGINE_URL as string | undefined)?.replace(/\/$/, '')
   if (!url) throw new Error('VITE_SIM_ENGINE_URL no configurada')
@@ -390,6 +392,8 @@ export async function callSimEngineSecondHalf(
     seed,
     score_home: scoreHome,
     score_away: scoreAway,
+    booked_home: bookedHome,
+    booked_away: bookedAway,
   }
 
   const res = await fetch(`${url}/simulate-second-half`, {
@@ -403,7 +407,7 @@ export async function callSimEngineSecondHalf(
   const data = await res.json() as EngineResult
 
   const TIPO_MAP: Record<string, EventType> = {
-    gol: 'goal', amarilla: 'yellow', roja: 'red',
+    gol: 'goal', amarilla: 'yellow', roja: 'red', doble_amarilla: 'double_yellow',
     atajada: 'save', ocasion_errada: 'shot_off',
     entretiempo: 'halftime', pitazo_final: 'fulltime', figura: 'motm',
   }

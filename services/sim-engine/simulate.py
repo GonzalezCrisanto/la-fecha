@@ -342,10 +342,11 @@ def apply_ten_men(xg_with_10, xg_opponent, red_minute, consts):
 
 def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
                  tactics_home=None, tactics_away=None,
-                 start_minute=1, end_minute=90):
+                 start_minute=1, end_minute=90,
+                 booked_home=None, booked_away=None):
     """
     Simula un partido (o fracción). start_minute/end_minute acotan el tiempo simulado.
-    tactics_home/away: dict con keys opcionales formation, mentality, intensity, captain_id.
+    booked_home/away: sets de nombres de jugadores con amarilla acumulada del PT.
     """
     tactics_home = tactics_home or {}
     tactics_away = tactics_away or {}
@@ -353,6 +354,7 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
 
     duration        = end_minute - start_minute + 1
     duration_factor = duration / 90
+    booked = {"home": set(booked_home or []), "away": set(booked_away or [])}
 
     result = {"home": [], "away": [], "events": [],
               "score_home": 0, "score_away": 0,
@@ -384,7 +386,15 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
             yellow, red, red_min = simulate_cards(
                 profile, fouls, pos, consts, team_card_mult, start_minute, end_minute)
 
-            card_results[side].append((yellow, red, red_min, fouls))
+            player_name = player.get("name", "")
+            is_double_yellow = False
+            if yellow and player_name and player_name in booked[side]:
+                # Segunda amarilla → expulsión
+                double_min = random.randint(start_minute, end_minute)
+                yellow, red, red_min = 0, 1, double_min
+                is_double_yellow = True
+
+            card_results[side].append((yellow, red, red_min, fouls, is_double_yellow))
 
             if red and red_min is not None:
                 if side == "home" and (home_red_min is None or red_min < home_red_min):
@@ -490,7 +500,7 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
             pos     = player["position"]
             profile = resolve_profile(player)
             mins    = player.get("minutes", 90)
-            yellow, red, red_min, fouls = cards[i]
+            yellow, red, red_min, fouls, is_double_yellow = cards[i]
 
             eff_mins   = min(mins, red_min - 1) if red and red_min else mins
             rating_raw = normal_clamp(profile["rating_mean"], profile["rating_std"])
@@ -520,7 +530,8 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
                 })
             if red:
                 result["events"].append({
-                    "side": side, "type": "red_card",
+                    "side": side,
+                    "type": "doble_amarilla" if is_double_yellow else "red_card",
                     "player": player.get("name", str(player.get("id"))),
                     "minute": red_min,
                 })
@@ -573,7 +584,8 @@ def calc_points(stat, goals_against, is_captain=False):
 
 def simulate_match(home_lineup, away_lineup, home_team="", away_team="",
                    tactics_home=None, tactics_away=None, n_sims=10_000,
-                   start_minute=1, end_minute=90):
+                   start_minute=1, end_minute=90,
+                   booked_home=None, booked_away=None):
     """
     Corre n_sims iteraciones y devuelve stats agregadas.
     tactics_home/away: ver _DEFAULT_TACTICS para los keys soportados.
@@ -596,7 +608,8 @@ def simulate_match(home_lineup, away_lineup, home_team="", away_team="",
 
     for _ in range(n_sims):
         m  = simulate_one(home_lineup, away_lineup, home_team, away_team,
-                          tactics_home, tactics_away, start_minute, end_minute)
+                          tactics_home, tactics_away, start_minute, end_minute,
+                          booked_home, booked_away)
         sh, sa = m["score_home"], m["score_away"]
         score_dist[f"{sh}-{sa}"] += 1
         outcomes["home" if sh > sa else "draw" if sh == sa else "away"] += 1
@@ -634,7 +647,8 @@ def simulate_match(home_lineup, away_lineup, home_team="", away_team="",
     # variedad entre partidos. win_probs y score_distribution siguen siendo las
     # métricas agregadas de las n_sims (no cambian).
     rep_match = simulate_one(home_lineup, away_lineup, home_team, away_team,
-                             tactics_home, tactics_away, start_minute, end_minute)
+                             tactics_home, tactics_away, start_minute, end_minute,
+                             booked_home, booked_away)
 
     def summarize(side):
         out = []

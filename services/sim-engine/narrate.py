@@ -88,6 +88,14 @@ TEMPLATES = {
         "{min}' — Amonestado {player} ({team}). La presión del partido se hace sentir.",
     ],
 
+    "doble_amarilla": [
+        "¡SEGUNDA AMARILLA para {player} de {team} a los {min}'! Doble amonestación y a las duchas.",
+        "{player} ({team}) vio la segunda amarilla a los {min}'. Dos en uno: se va expulsado.",
+        "El árbitro le mostró la segunda tarjeta amarilla a {player} ({team}) a los {min}'. Que se vaya.",
+        "¡Doble amarilla para {player} de {team} a los {min}'! El equipo deberá seguir con diez.",
+        "{min}' — Segunda amarilla para {player} ({team}). Dos advertencias, una expulsión.",
+    ],
+
     "roja": [
         "¡EXPULSADO! {player} de {team} ve la roja directa a los {min}'. "
         "El equipo deberá aguantar con diez hombres de acá en más.",
@@ -390,6 +398,14 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
             narration.append({
                 "minuto": minute, "tipo": "amarilla", "side": side, "player": player,
                 "texto":  pick("amarilla", player=player, team=team, min=minute),
+            })
+
+        elif ev_type == "doble_amarilla":
+            player = ev.get("player", "")
+            red_teams.add(side)
+            narration.append({
+                "minuto": minute, "tipo": "doble_amarilla", "side": side, "player": player,
+                "texto":  pick("doble_amarilla", player=player, team=team, min=minute),
             })
 
         elif ev_type == "red_card":
