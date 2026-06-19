@@ -243,6 +243,15 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
               🥅 Ir a penales →
             </button>
           )}
+          {!drew && onPenalties && (
+            <button
+              onClick={onPenalties}
+              className="w-full py-3 rounded-xl text-body-sm transition-all text-[#859585]"
+              style={{ background: 'transparent', border: '1px dashed #3b4a3d' }}
+            >
+              🧪 Probar penales
+            </button>
+          )}
           {remainingAttempts > 0 ? (
             <button
               onClick={onReplay}

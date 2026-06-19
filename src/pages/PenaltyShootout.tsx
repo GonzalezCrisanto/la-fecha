@@ -32,9 +32,13 @@ export default function PenaltyShootout({ squad, rival, seed, onBack }: Props) {
   const [lastKick, setLastKick] = useState<KickRecord | null>(null)
   const [pendingZone, setPendingZone] = useState<PenaltyZone | null>(null)
   const [winner, setWinner] = useState<'home' | 'away' | null>(null)
+  const [pendingRivalKick, setPendingRivalKick] = useState<{
+    kicker: Player; zone: PenaltyZone; gkZone: PenaltyZone; outcome: PenaltyOutcome
+  } | null>(null)
 
   const kicksRef = useRef<KickRecord[]>([])
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const innerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const homeGK = getGK(squad)
   const awayGK = getGK(rival.players)
@@ -83,7 +87,9 @@ export default function PenaltyShootout({ squad, rival, seed, onBack }: Props) {
     }, 1800)
   }
 
-  // Auto-kick for rival's turn
+  // Effect 1: wait for rival's turn then compute kick and start animation
+  // Cannot nest setKickStep inside the timeout because that re-render would trigger cleanup
+  // which cancels the inner timer. Solution: split into two separate effects.
   useEffect(() => {
     if (phase !== 'shooting') return
     if (kickStep !== 'idle') return
@@ -95,17 +101,33 @@ export default function PenaltyShootout({ squad, rival, seed, onBack }: Props) {
     const kicker = getKicker('away', sideCount, awayOrder, rival.players, seed)
 
     timerRef.current = setTimeout(() => {
+      const { zone, gkZone, outcome } = simulateRivalKick(kicker, homeGK, seed + idx * 37)
       setKickStep('animating')
-      timerRef.current = setTimeout(() => {
-        const { zone, gkZone, outcome } = simulateRivalKick(kicker, homeGK, seed + idx * 37)
-        processKick({ side: 'away', kicker, zone, gkZone, outcome })
-      }, 1500)
+      setPendingRivalKick({ kicker, zone, gkZone, outcome })
     }, 1200)
 
     return clearTimer
   }, [phase, kickStep, nextSide, kicks.length, winner])
 
-  useEffect(() => () => clearTimer(), [])
+  // Effect 2: once animation starts and kick is ready, process it after the animation delay
+  useEffect(() => {
+    if (kickStep !== 'animating' || !pendingRivalKick) return
+
+    innerTimerRef.current = setTimeout(() => {
+      const kick = pendingRivalKick
+      setPendingRivalKick(null)
+      processKick({ side: 'away', ...kick })
+    }, 1500)
+
+    return () => {
+      if (innerTimerRef.current) clearTimeout(innerTimerRef.current)
+    }
+  }, [kickStep, pendingRivalKick])
+
+  useEffect(() => () => {
+    clearTimer()
+    if (innerTimerRef.current) clearTimeout(innerTimerRef.current)
+  }, [])
 
   function handleCoinToss(first: 'home' | 'away') {
     setGoesFirst(first)
