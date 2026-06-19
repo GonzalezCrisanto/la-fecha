@@ -337,6 +337,15 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
     events += synthesize_extra_events(rep_match, rng, start_minute, end_minute)
     events.sort(key=lambda e: e.get("minute", 0))
 
+    # Resolve minute collisions by nudging later events forward by 1
+    seen_minutes: set[int] = set()
+    for ev in events:
+        m = ev.get("minute", 0)
+        while m in seen_minutes:
+            m += 1
+        seen_minutes.add(m)
+        ev["minute"] = m
+
     sh, sa           = start_score_home, start_score_away
     is_second_half   = start_minute > 1
     half_inserted    = is_second_half  # el descanso ya ocurrió si arrancamos en el ST
