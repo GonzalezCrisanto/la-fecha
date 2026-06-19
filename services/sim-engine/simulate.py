@@ -633,7 +633,8 @@ def simulate_match(home_lineup, away_lineup, home_team="", away_team="",
     # Ahora corremos un único simulate_one; el seed aleatorio por request garantiza
     # variedad entre partidos. win_probs y score_distribution siguen siendo las
     # métricas agregadas de las n_sims (no cambian).
-    rep_match = simulate_one(home_lineup, away_lineup, home_team, away_team, tactics_home, tactics_away)
+    rep_match = simulate_one(home_lineup, away_lineup, home_team, away_team,
+                             tactics_home, tactics_away, start_minute, end_minute)
 
     def summarize(side):
         out = []
