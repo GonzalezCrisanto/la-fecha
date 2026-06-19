@@ -630,7 +630,7 @@ function FeedCard({ entry, rivalName }: { entry: FeedEntry; rivalName: string })
 
 // ── StrategyPicker ────────────────────────────────────────────────────────────
 
-function StrategyPicker({ current, onSelect, compact = false }: { current: GameStrategy; onSelect: (s: GameStrategy) => void; compact?: boolean }) {
+export function StrategyPicker({ current, onSelect, compact = false }: { current: GameStrategy; onSelect: (s: GameStrategy) => void; compact?: boolean }) {
   return (
     <div className="grid grid-cols-2 gap-2">
       {(Object.keys(STRATEGIES) as GameStrategy[]).map(s => {

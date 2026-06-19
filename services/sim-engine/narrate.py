@@ -311,10 +311,11 @@ def build_summary(rep_match, score_home, score_away, home_team, away_team):
 
 # ── Narración principal ────────────────────────────────────────────────────────
 
-def generate_narration(rep_match, home_team, away_team, seed=42):
+def generate_narration(rep_match, home_team, away_team, seed=42,
+                       start_score_home=0, start_score_away=0):
     """
     Genera la lista de eventos narrados [{minuto, tipo, texto}].
-    Determinista: misma seed + mismo rep_match → misma narración.
+    start_score_home/away: score del primer tiempo si narramos solo el segundo.
     """
     rng = random.Random(seed)
 
@@ -323,8 +324,9 @@ def generate_narration(rep_match, home_team, away_team, seed=42):
     events += synthesize_extra_events(rep_match, rng)
     events.sort(key=lambda e: e.get("minute", 0))
 
-    sh, sa           = 0, 0           # marcador en vivo
-    half_inserted    = False
+    sh, sa           = start_score_home, start_score_away
+    is_second_half   = start_score_home > 0 or start_score_away > 0
+    half_inserted    = is_second_half  # ya pasó el descanso si arrancamos en el ST
     red_teams        = set()          # equipos con expulsados
     narration        = []
 

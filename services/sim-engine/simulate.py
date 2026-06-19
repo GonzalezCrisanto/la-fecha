@@ -308,7 +308,8 @@ def compute_team_xg(lineup, own_team, opp_team, is_home,
 
 # ── Tarjetas ──────────────────────────────────────────────────────────────────
 
-def simulate_cards(player, fouls, position, consts, card_mult=1.0):
+def simulate_cards(player, fouls, position, consts, card_mult=1.0,
+                   start_minute=1, end_minute=90):
     """
     Retorna (yellow, red, red_minute).
     card_mult combina el multiplicador de mentalidad e intensidad del equipo.
@@ -322,7 +323,7 @@ def simulate_cards(player, fouls, position, consts, card_mult=1.0):
                  if fouls_p90 >= consts["red_high_foul_threshold"] else 1.0)
     p_red = consts["red_base_prob"] * pos_mult * foul_mult * card_mult
     red   = 1 if random.random() < p_red else 0
-    red_min = random.randint(1, 90) if red else None
+    red_min = random.randint(start_minute, end_minute) if red else None
 
     return yellow, red, red_min
 
@@ -340,25 +341,28 @@ def apply_ten_men(xg_with_10, xg_opponent, red_minute, consts):
 # ── Simulación de un partido ──────────────────────────────────────────────────
 
 def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
-                 tactics_home=None, tactics_away=None):
+                 tactics_home=None, tactics_away=None,
+                 start_minute=1, end_minute=90):
     """
-    Simula un partido. Retorna dict con stats por jugador + eventos.
+    Simula un partido (o fracción). start_minute/end_minute acotan el tiempo simulado.
     tactics_home/away: dict con keys opcionales formation, mentality, intensity, captain_id.
-    Si no se pasan, todos los multiplicadores tácticos son 1.0.
     """
     tactics_home = tactics_home or {}
     tactics_away = tactics_away or {}
     consts = get_constants()
 
+    duration        = end_minute - start_minute + 1
+    duration_factor = duration / 90
+
     result = {"home": [], "away": [], "events": [],
               "score_home": 0, "score_away": 0,
               "goals_home_late": 0, "goals_away_late": 0}
 
-    # ── 1. xG por equipo (incluye tácticas) ───────────────────────────────────
+    # ── 1. xG por equipo (incluye tácticas, escalado al tiempo simulado) ──────
     xg_home = compute_team_xg(home_lineup, home_team, away_team,
-                               is_home=True,  own_tactics=tactics_home, opp_tactics=tactics_away)
+                               is_home=True,  own_tactics=tactics_home, opp_tactics=tactics_away) * duration_factor
     xg_away = compute_team_xg(away_lineup, away_team, home_team,
-                               is_home=False, own_tactics=tactics_away, opp_tactics=tactics_home)
+                               is_home=False, own_tactics=tactics_away, opp_tactics=tactics_home) * duration_factor
 
     # ── 2. Tarjetas y efecto 10 hombres ───────────────────────────────────────
     home_red_min = away_red_min = None
@@ -376,8 +380,9 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
             mins    = player.get("minutes", 90)
 
             fouls_rate = profile.get("fouls_per_90", profile["fouls_per_match"])
-            fouls = poisson_sample(fouls_rate * mins / 90)
-            yellow, red, red_min = simulate_cards(profile, fouls, pos, consts, team_card_mult)
+            fouls = poisson_sample(fouls_rate * duration_factor)
+            yellow, red, red_min = simulate_cards(
+                profile, fouls, pos, consts, team_card_mult, start_minute, end_minute)
 
             card_results[side].append((yellow, red, red_min, fouls))
 
@@ -392,18 +397,19 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
     if away_red_min is not None:
         xg_away, xg_home = apply_ten_men(xg_away, xg_home, away_red_min, consts)
 
-    # ── 3. Goles — Poisson con fatiga (split 75/15 para intensidad "alta") ────
+    # ── 3. Goles — Poisson con fatiga (fatiga en min 76-90) ──────────────────
     def _draw_goals_with_fatigue(xg, intensity_str):
         """
-        Siempre divide xG en dos segmentos: min 1-75 y min 76-90.
-        Para 'alta': aplica fatigue_mult en el segmento tardío.
-        La suma sigue siendo Poisson(xg) en esperanza para intensidades sin fatiga.
-        Retorna (total_goals, late_goals) para comparar el efecto de fatiga.
+        Divide xG en early (hasta min 75) y late (76-end) según el rango simulado.
+        Para intensidad 'alta': aplica fatigue_mult en el segmento tardío.
         """
-        int_p = INTENSITY_PARAMS.get(intensity_str, INTENSITY_PARAMS["media"])
-        fat   = int_p.get("fatigue_mult", 1.0)
-        early = poisson_sample(max(xg * 75 / 90, 0))
-        late  = poisson_sample(max(xg * 15 / 90 * fat, 0))
+        int_p      = INTENSITY_PARAMS.get(intensity_str, INTENSITY_PARAMS["media"])
+        fat        = int_p.get("fatigue_mult", 1.0)
+        boundary   = 76
+        early_mins = max(0, min(boundary - 1, end_minute) - start_minute + 1)
+        late_mins  = max(0, end_minute - max(start_minute, boundary) + 1)
+        early = poisson_sample(max(xg * early_mins / duration, 0))
+        late  = poisson_sample(max(xg * late_mins  / duration * fat, 0))
         return early + late, late
 
     int_home_str = tactics_home.get("intensity", "media")
@@ -477,7 +483,7 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
                         "type":     "goal",
                         "player":   scorer_name,
                         "assister": assister_name,
-                        "minute":   random.randint(1, 90),
+                        "minute":   random.randint(start_minute, end_minute),
                     })
 
         for i, (player, goals) in enumerate(zip(lineup, goal_dist)):
@@ -510,7 +516,7 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
                 result["events"].append({
                     "side": side, "type": "yellow_card",
                     "player": player.get("name", str(player.get("id"))),
-                    "minute": random.randint(1, 90),
+                    "minute": random.randint(start_minute, end_minute),
                 })
             if red:
                 result["events"].append({
@@ -566,7 +572,8 @@ def calc_points(stat, goals_against, is_captain=False):
 # ── API pública ───────────────────────────────────────────────────────────────
 
 def simulate_match(home_lineup, away_lineup, home_team="", away_team="",
-                   tactics_home=None, tactics_away=None, n_sims=10_000):
+                   tactics_home=None, tactics_away=None, n_sims=10_000,
+                   start_minute=1, end_minute=90):
     """
     Corre n_sims iteraciones y devuelve stats agregadas.
     tactics_home/away: ver _DEFAULT_TACTICS para los keys soportados.
@@ -589,7 +596,7 @@ def simulate_match(home_lineup, away_lineup, home_team="", away_team="",
 
     for _ in range(n_sims):
         m  = simulate_one(home_lineup, away_lineup, home_team, away_team,
-                          tactics_home, tactics_away)
+                          tactics_home, tactics_away, start_minute, end_minute)
         sh, sa = m["score_home"], m["score_away"]
         score_dist[f"{sh}-{sa}"] += 1
         outcomes["home" if sh > sa else "draw" if sh == sa else "away"] += 1

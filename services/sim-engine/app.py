@@ -51,12 +51,24 @@ class MatchInput(BaseModel):
     n_sims: int = 5_000
     seed: int = 42
 
+class SecondHalfInput(MatchInput):
+    score_home: int = 0
+    score_away: int = 0
+
 
 # ── Endpoints ──────────────────────────────────────────────────────────────────
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+_RIVAL_MENTALITIES = ["equilibrada", "ofensiva", "defensiva", "contraataque"]
+_RIVAL_WEIGHTS     = [0.35, 0.25, 0.25, 0.15]
+
+def _rival_mentality(away_team: str, seed: int) -> str:
+    rng = random.Random(seed + hash(away_team) % 10_000)
+    return rng.choices(_RIVAL_MENTALITIES, weights=_RIVAL_WEIGHTS, k=1)[0]
 
 
 @app.post("/simulate")
@@ -70,13 +82,17 @@ def simulate(match: MatchInput):
             d["generic"] = True
         return d
 
+    tactics_away = match.tactics_away.model_dump()
+    if tactics_away.get("mentality") == "equilibrada":
+        tactics_away["mentality"] = _rival_mentality(match.away_team, match.seed)
+
     result = simulate_match(
         [to_player(p) for p in match.home],
         [to_player(p) for p in match.away],
         home_team=match.home_team,
         away_team=match.away_team,
         tactics_home=match.tactics_home.model_dump(),
-        tactics_away=match.tactics_away.model_dump(),
+        tactics_away=tactics_away,
         n_sims=match.n_sims,
     )
 
@@ -87,6 +103,55 @@ def simulate(match: MatchInput):
     if rep:
         narration_list, sh, sa = generate_narration(
             rep, match.home_team, match.away_team, seed=match.seed
+        )
+        narration_text = narration_to_text(
+            narration_list, match.home_team, match.away_team, sh, sa
+        )
+        narration = narration_list
+
+    return {**result, "narration": narration, "narration_text": narration_text}
+
+
+@app.post("/simulate-second-half")
+def simulate_second_half(match: SecondHalfInput):
+    """Simulates only the second half (min 46-90) using a given first-half score as context."""
+    random.seed(match.seed + 1)
+
+    def to_player(p: PlayerInput) -> dict:
+        d = {k: v for k, v in p.model_dump().items() if v is not None}
+        if d.get("id") is None:
+            d["generic"] = True
+        return d
+
+    tactics_away = match.tactics_away.model_dump()
+    if tactics_away.get("mentality") == "equilibrada":
+        tactics_away["mentality"] = _rival_mentality(match.away_team, match.seed)
+
+    result = simulate_match(
+        [to_player(p) for p in match.home],
+        [to_player(p) for p in match.away],
+        home_team=match.home_team,
+        away_team=match.away_team,
+        tactics_home=match.tactics_home.model_dump(),
+        tactics_away=tactics_away,
+        n_sims=match.n_sims,
+        start_minute=46,
+        end_minute=90,
+    )
+
+    rep = result.get("representative_match")
+    narration: list | None = None
+    narration_text = ""
+
+    if rep:
+        # Offset the representative score with the first-half result
+        rep["score_home"] += match.score_home
+        rep["score_away"] += match.score_away
+
+        narration_list, sh, sa = generate_narration(
+            rep, match.home_team, match.away_team, seed=match.seed + 1,
+            start_score_home=match.score_home,
+            start_score_away=match.score_away,
         )
         narration_text = narration_to_text(
             narration_list, match.home_team, match.away_team, sh, sa

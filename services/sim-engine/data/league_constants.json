@@ -3,8 +3,8 @@
   "goals_home_mean": 1.1402,
   "goals_away_mean": 0.8785,
   "league_avg_goals": 1.0093,
-  "home_factor": 1.1296,
-  "away_factor": 0.8704,
+  "home_factor": 1.0,
+  "away_factor": 1.0,
   "team_fouls_mean": 12.394,
   "team_strengths": {
     "Huracán": {

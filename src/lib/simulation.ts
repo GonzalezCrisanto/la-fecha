@@ -302,14 +302,21 @@ function toEnginePlayer(p: Player) {
   }
 }
 
-export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: number): Promise<MatchResult> {
+const STRATEGY_MENTALITY: Record<string, string> = {
+  balanced:  'equilibrada',
+  offensive: 'ofensiva',
+  defensive: 'defensiva',
+  counter:   'contraataque',
+}
+
+export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: number, strategy = 'balanced'): Promise<MatchResult> {
   const url = (import.meta.env.VITE_SIM_ENGINE_URL as string | undefined)?.replace(/\/$/, '')
   if (!url) throw new Error('VITE_SIM_ENGINE_URL no configurada')
 
   const body = {
     home_team: 'Tu Equipo',
     away_team: rival.name,
-    tactics_home: { formation: null, mentality: 'equilibrada', intensity: 'media', captain_id: null },
+    tactics_home: { formation: null, mentality: STRATEGY_MENTALITY[strategy] ?? 'equilibrada', intensity: 'media', captain_id: null },
     tactics_away: { formation: rival.formation ?? null, mentality: 'equilibrada', intensity: 'media', captain_id: null },
     home: mySquad.map(toEnginePlayer),
     away: rival.players.map(toEnginePlayer),

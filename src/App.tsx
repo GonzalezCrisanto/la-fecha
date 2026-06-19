@@ -3,13 +3,16 @@ import Home from './pages/Home'
 import Draft from './pages/Draft'
 import SimResult from './pages/SimResult'
 import Adventure from './pages/Adventure'
+import { StrategyPicker } from './pages/Adventure'
 import { simulateMatch, callSimEngine } from './lib/simulation'
 import { getDailyChallenge, getAdventureRivals, teamDisplayName } from './lib/players'
 import { getRemainingAttempts, consumeAttempt, resetAttempts } from './lib/attempts'
+import { STRATEGIES } from './lib/adventure'
 import type { GameMode, Player, DailyChallenge, RivalTeam } from './types'
 import type { MatchResult } from './lib/simulation'
+import type { GameStrategy } from './lib/adventure'
 
-type Screen = 'home' | 'draft' | 'sim-loading' | 'sim-result' | 'adventure'
+type Screen = 'home' | 'draft' | 'sim-strategy' | 'sim-loading' | 'sim-result' | 'adventure'
 
 function dateSeed(): number {
   return new Date().toISOString().slice(0, 10).split('').reduce((a, c) => a + c.charCodeAt(0), 0)
@@ -24,6 +27,7 @@ export default function App() {
   const [adventureRivals, setAdventureRivals] = useState<RivalTeam[]>([])
   const [simAttempts, setSimAttempts] = useState(() => getRemainingAttempts('sim'))
   const [adventureAttempts, setAdventureAttempts] = useState(() => getRemainingAttempts('adventure'))
+  const [simStrategy, setSimStrategy] = useState<GameStrategy>('balanced')
 
   function handlePlay(selectedMode: GameMode) {
     setMode(selectedMode)
@@ -37,7 +41,7 @@ export default function App() {
     if (mode === 'sim') {
       consumeAttempt('sim')
       setSimAttempts(getRemainingAttempts('sim'))
-      setScreen('sim-loading')
+      setScreen('sim-strategy')
     } else {
       consumeAttempt('adventure')
       setAdventureAttempts(getRemainingAttempts('adventure'))
@@ -69,12 +73,25 @@ export default function App() {
     )
   }
 
+  if (screen === 'sim-strategy' && challenge) {
+    return (
+      <SimStrategyScreen
+        rival={challenge.rival}
+        strategy={simStrategy}
+        onSelect={setSimStrategy}
+        onConfirm={() => setScreen('sim-loading')}
+        onBack={() => setScreen('draft')}
+      />
+    )
+  }
+
   if (screen === 'sim-loading' && challenge) {
     return (
       <SimLoading
         squad={squad}
         rival={challenge.rival}
         seed={dateSeed()}
+        strategy={simStrategy}
         onDone={(result) => {
           setSimResult(result)
           setScreen('sim-result')
@@ -156,14 +173,15 @@ function DraftBridge({
   return <Draft mode={mode} onBack={onBack} onConfirm={handleConfirm} />
 }
 
-function SimLoading({ squad, rival, seed, onDone }: {
+function SimLoading({ squad, rival, seed, strategy, onDone }: {
   squad: Player[]
   rival: RivalTeam
   seed: number
+  strategy: GameStrategy
   onDone: (result: MatchResult) => void
 }) {
   useEffect(() => {
-    callSimEngine(squad, rival, seed)
+    callSimEngine(squad, rival, seed, strategy)
       .then(result => onDone(result))
       .catch(err => {
         console.warn('[SimEngine] Fallback a simulación local:', err)
@@ -202,6 +220,64 @@ function SimLoading({ squad, rival, seed, onDone }: {
           50%       { opacity: 1;   transform: scale(1.2); }
         }
       `}</style>
+    </div>
+  )
+}
+
+function SimStrategyScreen({ rival, strategy, onSelect, onConfirm, onBack }: {
+  rival: RivalTeam
+  strategy: GameStrategy
+  onSelect: (s: GameStrategy) => void
+  onConfirm: () => void
+  onBack: () => void
+}) {
+  const cfg = STRATEGIES[strategy]
+  return (
+    <div
+      className="h-svh flex flex-col"
+      style={{ background: '#101319', maxWidth: '640px', margin: '0 auto', width: '100%' }}
+    >
+      <header
+        className="shrink-0 flex items-center gap-3 px-4 py-3 border-b"
+        style={{ background: '#1d2025', borderColor: '#3b4a3d' }}
+      >
+        <button onClick={onBack} className="text-body-sm text-[#bacbb9] hover:text-[#e1e2ea] transition-colors">
+          ← Volver
+        </button>
+        <p className="flex-1 text-center text-body-sm font-semibold text-[#e1e2ea]">
+          Estrategia · vs {teamDisplayName(rival.name)}
+        </p>
+      </header>
+
+      <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-5">
+        <div>
+          <p className="text-label-caps text-[#859585] mb-1 tracking-widest">ELEGÍ TU TÁCTICA</p>
+          <p className="text-body-sm text-[#bacbb9]">
+            Influye en el xG, la solidez defensiva y las probabilidades de gol durante la simulación.
+          </p>
+        </div>
+        <StrategyPicker current={strategy} onSelect={onSelect} />
+        {cfg && (
+          <div
+            className="rounded-xl p-4 flex flex-col gap-1"
+            style={{ background: '#1d2025', border: '1px solid #3b4a3d' }}
+          >
+            <p className="text-body-sm font-bold text-[#e1e2ea] mb-1">{cfg.label}</p>
+            {cfg.pros.map(p => <p key={p} className="text-label-caps" style={{ color: '#75ff9e', fontSize: '11px' }}>{p}</p>)}
+            {cfg.cons.map(c => <p key={c} className="text-label-caps" style={{ color: '#ffb4ab', fontSize: '11px' }}>{c}</p>)}
+          </div>
+        )}
+      </div>
+
+      <div className="shrink-0 px-4 py-4 border-t" style={{ background: '#1d2025', borderColor: '#3b4a3d' }}>
+        <button
+          onClick={onConfirm}
+          className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
+          style={{ background: '#75ff9e', color: '#003918' }}
+        >
+          Simular partido →
+        </button>
+      </div>
     </div>
   )
 }
