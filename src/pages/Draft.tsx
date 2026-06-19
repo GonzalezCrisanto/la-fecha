@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
   loadPlayers, getDailyChallenge, playersByPosition,
-  SQUAD_SLOTS, BUDGET, MAX_PER_CLUB, teamDisplayName,
+  FORMATION_SLOTS, BUDGET, MAX_PER_CLUB, teamDisplayName,
 } from '../lib/players'
-import type { Player, Position, GameMode, DailyChallenge } from '../types'
+import type { Player, Position, GameMode, DailyChallenge, Formation } from '../types'
 
 const POSITIONS: Position[] = ['ARQ', 'DEF', 'MED', 'DEL']
+const FORMATIONS: Formation[] = ['4-3-3', '4-4-2', '3-5-2', '4-2-3-1', '3-4-3', '5-3-2']
 
 const BADGE_CLASS: Record<Position, string> = {
   ARQ: 'badge-arq',
@@ -21,11 +22,14 @@ interface Props {
 }
 
 export default function Draft({ mode, onBack, onConfirm }: Props) {
-  const [allPlayers, setAllPlayers] = useState<Player[]>([])
-  const [challenge, setChallenge] = useState<DailyChallenge | null>(null)
-  const [squad, setSquad] = useState<Player[]>([])
-  const [activePos, setActivePos] = useState<Position>('ARQ')
-  const [search, setSearch] = useState('')
+  const [allPlayers, setAllPlayers]   = useState<Player[]>([])
+  const [challenge, setChallenge]     = useState<DailyChallenge | null>(null)
+  const [formation, setFormation]     = useState<Formation>('4-3-3')
+  const [squad, setSquad]             = useState<Player[]>([])
+  const [activePos, setActivePos]     = useState<Position>('ARQ')
+  const [search, setSearch]           = useState('')
+
+  const slots = FORMATION_SLOTS[formation]
 
   useEffect(() => {
     loadPlayers().then(players => {
@@ -35,14 +39,19 @@ export default function Draft({ mode, onBack, onConfirm }: Props) {
   }, [])
 
   const budget = BUDGET - squad.reduce((sum, p) => sum + p.value, 0)
-  const isComplete = POSITIONS.every(
-    pos => squad.filter(p => p.position === pos).length === SQUAD_SLOTS[pos]
-  )
+  const isComplete = POSITIONS.every(pos => squad.filter(p => p.position === pos).length === slots[pos])
+
+  function selectFormation(f: Formation) {
+    setFormation(f)
+    setSquad([])
+    setActivePos('ARQ')
+    setSearch('')
+  }
 
   function canAdd(player: Player): boolean {
     if (squad.find(p => p.id === player.id)) return false
     if (challenge?.blockedPlayerIds.includes(player.id)) return false
-    if (squad.filter(p => p.position === player.position).length >= SQUAD_SLOTS[player.position]) return false
+    if (squad.filter(p => p.position === player.position).length >= slots[player.position]) return false
     if (squad.filter(p => p.team === player.team).length >= MAX_PER_CLUB) return false
     if (player.value > budget) return false
     return true
@@ -61,10 +70,9 @@ export default function Draft({ mode, onBack, onConfirm }: Props) {
     .filter(p => !challenge?.blockedPlayerIds.includes(p.id))
 
   const slotsFilled = squad.filter(p => p.position === activePos).length
-  const slotsNeeded = SQUAD_SLOTS[activePos]
+  const slotsNeeded = slots[activePos]
 
   return (
-    // h-svh + flex-col → toda la pantalla, sin scroll de página
     <div className="h-svh flex flex-col" style={{ background: '#101319', maxWidth: '640px', margin: '0 auto', width: '100%' }}>
 
       {/* ── Header ── */}
@@ -96,6 +104,30 @@ export default function Draft({ mode, onBack, onConfirm }: Props) {
         </div>
       </header>
 
+      {/* ── Formación ── */}
+      <div
+        className="shrink-0 px-4 py-2 border-b overflow-x-auto"
+        style={{ background: '#191c21', borderColor: '#272a30' }}
+      >
+        <p className="text-label-caps text-[#859585] mb-2">FORMACIÓN</p>
+        <div className="flex gap-2 pb-1">
+          {FORMATIONS.map(f => (
+            <button
+              key={f}
+              onClick={() => selectFormation(f)}
+              className="shrink-0 px-3 py-1.5 rounded-lg text-body-sm font-bold transition-all"
+              style={{
+                background: formation === f ? '#75ff9e22' : '#1d2025',
+                border: `1px solid ${formation === f ? '#75ff9e' : '#3b4a3d'}`,
+                color: formation === f ? '#75ff9e' : '#859585',
+              }}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ── Tabs de posición ── */}
       <nav
         className="shrink-0 flex border-b"
@@ -103,8 +135,8 @@ export default function Draft({ mode, onBack, onConfirm }: Props) {
       >
         {POSITIONS.map(pos => {
           const filled = squad.filter(p => p.position === pos).length
-          const total = SQUAD_SLOTS[pos]
-          const done = filled === total
+          const total  = slots[pos]
+          const done   = filled === total
           return (
             <button
               key={pos}
@@ -141,8 +173,7 @@ export default function Draft({ mode, onBack, onConfirm }: Props) {
         </p>
       </div>
 
-      {/* ── Lista (scroll contenido) ── */}
-      {/* min-h-0 es clave: sin él el flex child ignora overflow */}
+      {/* ── Lista ── */}
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-2 flex flex-col gap-2 dark-scrollbar">
         {pool.map(player => {
           const inSquad = !!squad.find(p => p.id === player.id)

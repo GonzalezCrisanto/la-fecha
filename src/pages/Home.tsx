@@ -4,9 +4,12 @@ import type { DailyChallenge, GameMode } from '../types'
 
 interface Props {
   onPlay: (mode: GameMode) => void
+  simAttempts: number
+  adventureAttempts: number
+  onResetAttempts: () => void
 }
 
-export default function Home({ onPlay }: Props) {
+export default function Home({ onPlay, simAttempts, adventureAttempts, onResetAttempts }: Props) {
   const [challenge, setChallenge] = useState<DailyChallenge | null>(null)
 
   useEffect(() => {
@@ -19,11 +22,12 @@ export default function Home({ onPlay }: Props) {
 
   return (
     <div
-      className="min-h-svh flex flex-col items-center justify-center px-4 py-8 gap-8"
+      className="min-h-svh flex flex-col"
       style={{
         background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,230,118,0.06) 0%, transparent 70%), #101319',
       }}
     >
+    <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 gap-8">
       {/* Título */}
       <div className="text-center">
         <div className="inline-flex items-center gap-2 mb-3">
@@ -49,10 +53,12 @@ export default function Home({ onPlay }: Props) {
             style={{ borderTop: '1px solid #3b4a3d' }}
           >
             <span>
-              <span className="text-[#75ff9e]">{challenge.rival.players.length}</span> bloqueados
+              ⚡ <span className={simAttempts > 0 ? 'text-[#75ff9e]' : 'text-[#ffb4ab]'}>{simAttempts}</span> chances
             </span>
             <span className="text-[#3b4a3d]">·</span>
-            <span className="capitalize">{today}</span>
+            <span>
+              🎮 <span className={adventureAttempts > 0 ? 'text-[#75ff9e]' : 'text-[#ffb4ab]'}>{adventureAttempts}</span> chances
+            </span>
           </div>
         </div>
       ) : (
@@ -63,14 +69,16 @@ export default function Home({ onPlay }: Props) {
       <div className="flex flex-col gap-3 w-full max-w-sm">
         <button
           onClick={() => onPlay('sim')}
-          className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
+          disabled={simAttempts === 0}
+          className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ background: '#75ff9e', color: '#003918' }}
         >
           ⚡ Simulación
         </button>
         <button
           onClick={() => onPlay('adventure')}
-          className="w-full font-bold py-4 rounded-xl text-body-lg transition-all"
+          disabled={adventureAttempts === 0}
+          className="w-full font-bold py-4 rounded-xl text-body-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ background: '#75ff9e', color: '#003918' }}
         >
           🎮 Aventura
@@ -78,6 +86,17 @@ export default function Home({ onPlay }: Props) {
       </div>
 
       <p className="text-label-caps text-[#859585] capitalize">{today}</p>
+    </main>
+
+    <footer className="shrink-0 py-4 flex flex-col items-center gap-2">
+      <button
+        onClick={onResetAttempts}
+        className="text-label-caps text-[#3b4a3d] hover:text-[#859585] transition-colors underline underline-offset-2"
+      >
+        [dev] renovar chances
+      </button>
+      <p className="text-label-caps text-[#3b4a3d]">Fantasy LPF · La Fecha · {new Date().getFullYear()}</p>
+    </footer>
     </div>
   )
 }

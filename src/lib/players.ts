@@ -59,6 +59,15 @@ export const SQUAD_SLOTS: Record<Position, number> = {
   DEL: 3,
 }
 
+export const FORMATION_SLOTS: Record<Formation, Record<Position, number>> = {
+  '4-3-3':   { ARQ: 1, DEF: 4, MED: 3, DEL: 3 },
+  '4-4-2':   { ARQ: 1, DEF: 4, MED: 4, DEL: 2 },
+  '3-5-2':   { ARQ: 1, DEF: 3, MED: 5, DEL: 2 },
+  '4-2-3-1': { ARQ: 1, DEF: 4, MED: 5, DEL: 1 },
+  '3-4-3':   { ARQ: 1, DEF: 3, MED: 4, DEL: 3 },
+  '5-3-2':   { ARQ: 1, DEF: 5, MED: 3, DEL: 2 },
+}
+
 export const BUDGET = 400
 
 export const MAX_PER_CLUB = 3

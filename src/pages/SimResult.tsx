@@ -6,11 +6,12 @@ import { teamDisplayName } from '../lib/players'
 interface Props {
   result: MatchResult
   rival: RivalTeam
+  remainingAttempts: number
   onBack: () => void
   onReplay: () => void
 }
 
-export default function SimResult({ result, rival, onBack, onReplay }: Props) {
+export default function SimResult({ result, rival, remainingAttempts, onBack, onReplay }: Props) {
   const [visibleCount, setVisibleCount] = useState(0)
   const isLive = visibleCount < result.events.length
   const visibleEvents = result.events.slice(0, visibleCount)
@@ -132,13 +133,23 @@ export default function SimResult({ result, rival, onBack, onReplay }: Props) {
           className="shrink-0 px-4 py-4 border-t flex flex-col gap-2"
           style={{ background: '#1d2025', borderColor: '#3b4a3d' }}
         >
-          <button
-            onClick={onReplay}
-            className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
-            style={{ background: '#75ff9e', color: '#003918' }}
-          >
-            🔄 Volver a armar equipo
-          </button>
+          {remainingAttempts > 0 ? (
+            <button
+              onClick={onReplay}
+              className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
+              style={{ background: '#75ff9e', color: '#003918' }}
+            >
+              🔄 Volver a armar equipo
+              <span className="ml-2 text-label-caps opacity-70">({remainingAttempts} {remainingAttempts === 1 ? 'chance' : 'chances'})</span>
+            </button>
+          ) : (
+            <div
+              className="w-full py-4 rounded-xl text-center text-body-sm text-[#859585]"
+              style={{ background: '#191c21', border: '1px solid #3b4a3d' }}
+            >
+              Sin más chances hoy · Volvé mañana
+            </div>
+          )}
           <button
             onClick={onBack}
             className="w-full font-bold py-3 rounded-xl text-body-sm transition-all text-[#bacbb9]"

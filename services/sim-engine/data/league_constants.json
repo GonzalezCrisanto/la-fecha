@@ -1,0 +1,174 @@
+{
+  "_note_cards": "Parámetros de tarjetas son estimaciones — el dataset no tiene datos directos. yellow_per_foul calibrado para ~3.5 amarillas/equipo/partido (mean_team_fouls≈12.5 × 0.28 ≈ 3.5). red_base_prob calibrado a 0.0025 (multiplicadores apilados → ~0.035 rojas/equipo/partido).",
+  "goals_home_mean": 1.1402,
+  "goals_away_mean": 0.8785,
+  "league_avg_goals": 1.0093,
+  "home_factor": 1.1296,
+  "away_factor": 0.8704,
+  "team_fouls_mean": 12.394,
+  "team_strengths": {
+    "Huracán": {
+      "attack_strength": 0.9436,
+      "defense_strength": 0.802,
+      "n_matches": 21
+    },
+    "Club Atlético Unión de Santa Fe": {
+      "attack_strength": 1.1971,
+      "defense_strength": 1.3623,
+      "n_matches": 24
+    },
+    "Central Córdoba": {
+      "attack_strength": 0.7843,
+      "defense_strength": 1.1559,
+      "n_matches": 24
+    },
+    "Argentinos Juniors": {
+      "attack_strength": 1.0808,
+      "defense_strength": 0.6305,
+      "n_matches": 22
+    },
+    "Tigre": {
+      "attack_strength": 1.0808,
+      "defense_strength": 0.8106,
+      "n_matches": 22
+    },
+    "CA Independiente": {
+      "attack_strength": 1.2609,
+      "defense_strength": 1.1258,
+      "n_matches": 22
+    },
+    "Independiente Rivadavia": {
+      "attack_strength": 1.387,
+      "defense_strength": 0.9247,
+      "n_matches": 15
+    },
+    "River Plate": {
+      "attack_strength": 1.163,
+      "defense_strength": 0.8615,
+      "n_matches": 23
+    },
+    "Rosario Central": {
+      "attack_strength": 1.1813,
+      "defense_strength": 0.9526,
+      "n_matches": 26
+    },
+    "Sarmiento": {
+      "attack_strength": 0.7926,
+      "defense_strength": 1.2549,
+      "n_matches": 15
+    },
+    "Instituto De Córdoba": {
+      "attack_strength": 0.9007,
+      "defense_strength": 0.8556,
+      "n_matches": 22
+    },
+    "Defensa y Justicia": {
+      "attack_strength": 1.2109,
+      "defense_strength": 1.1559,
+      "n_matches": 18
+    },
+    "CA Talleres": {
+      "attack_strength": 0.9007,
+      "defense_strength": 0.9007,
+      "n_matches": 22
+    },
+    "Barracas Central": {
+      "attack_strength": 0.8256,
+      "defense_strength": 1.032,
+      "n_matches": 24
+    },
+    "Gimnasia y Esgrima Mendoza": {
+      "attack_strength": 0.7926,
+      "defense_strength": 1.0568,
+      "n_matches": 15
+    },
+    "Deportivo Riestra": {
+      "attack_strength": 0.4954,
+      "defense_strength": 0.7205,
+      "n_matches": 22
+    },
+    "CA Lanús": {
+      "attack_strength": 0.8138,
+      "defense_strength": 1.0261,
+      "n_matches": 28
+    },
+    "Newell's Old Boys": {
+      "attack_strength": 0.9907,
+      "defense_strength": 1.6318,
+      "n_matches": 17
+    },
+    "Racing Club": {
+      "attack_strength": 0.9046,
+      "defense_strength": 0.9046,
+      "n_matches": 23
+    },
+    "Banfield": {
+      "attack_strength": 0.9907,
+      "defense_strength": 1.163,
+      "n_matches": 23
+    },
+    "Club Atlético Belgrano": {
+      "attack_strength": 1.0769,
+      "defense_strength": 0.6892,
+      "n_matches": 23
+    },
+    "Atlético Tucumán": {
+      "attack_strength": 0.9907,
+      "defense_strength": 1.1765,
+      "n_matches": 16
+    },
+    "Boca Juniors": {
+      "attack_strength": 1.5097,
+      "defense_strength": 0.7077,
+      "n_matches": 21
+    },
+    "Vélez Sarsfield": {
+      "attack_strength": 1.032,
+      "defense_strength": 0.8256,
+      "n_matches": 24
+    },
+    "San Lorenzo": {
+      "attack_strength": 0.9412,
+      "defense_strength": 0.9412,
+      "n_matches": 20
+    },
+    "Gimnasia y Esgrima": {
+      "attack_strength": 1.0808,
+      "defense_strength": 1.0808,
+      "n_matches": 22
+    },
+    "Club Atlético Platense": {
+      "attack_strength": 0.6055,
+      "defense_strength": 0.8256,
+      "n_matches": 18
+    },
+    "Aldosivi": {
+      "attack_strength": 0.3302,
+      "defense_strength": 1.0568,
+      "n_matches": 15
+    },
+    "Estudiantes de La Plata": {
+      "attack_strength": 1.1709,
+      "defense_strength": 0.4954,
+      "n_matches": 22
+    },
+    "Estudiantes de Río Cuarto": {
+      "attack_strength": 0.2642,
+      "defense_strength": 1.387,
+      "n_matches": 15
+    }
+  },
+  "yellow_per_foul": 0.28,
+  "yellow_prob_cap": 0.7,
+  "red_base_prob": 0.0025,
+  "red_position_multiplier": {
+    "ARQ": 0.2,
+    "DEF": 1.4,
+    "MED": 1.0,
+    "DEL": 0.8
+  },
+  "red_high_foul_threshold": 1.5,
+  "red_high_foul_multiplier": 1.5,
+  "ten_men_offense_multiplier": 0.75,
+  "ten_men_defense_multiplier": 1.25
+}

@@ -54,6 +54,116 @@ function poissonSample(lambda: number, rand: () => number): number {
   return k - 1
 }
 
+// ── Adventure mode: segment-based interactive simulation ──────────────────
+
+export interface DecisionOption {
+  id: string
+  label: string
+  description: string
+  attackMod: number
+  defenseMod: number
+}
+
+export interface MatchDecision {
+  minute: number
+  context: string
+  options: [DecisionOption, DecisionOption, DecisionOption]
+}
+
+export const ADVENTURE_DECISIONS: [MatchDecision, MatchDecision] = [
+  {
+    minute: 30,
+    context: '¿Qué indicación dás en el descanso?',
+    options: [
+      { id: 'attack',   label: '⚡ Salir a ganar',          description: 'Presión alta, más líneas ofensivas', attackMod: 1.35, defenseMod: 0.80 },
+      { id: 'balanced', label: '⚖️ Mantener el esquema',    description: 'Sin cambios tácticos',              attackMod: 1.08, defenseMod: 1.08 },
+      { id: 'defend',   label: '🛡 Cerrar la defensa',      description: 'Línea baja, aguantar y contragolpear', attackMod: 0.80, defenseMod: 1.35 },
+    ],
+  },
+  {
+    minute: 65,
+    context: '¿Qué cambio hacés en el minuto 65?',
+    options: [
+      { id: 'striker',  label: '🔄 Meter un 9 fresco',      description: 'Delantero de área al campo',        attackMod: 1.45, defenseMod: 0.82 },
+      { id: 'mid',      label: '🔄 Cambio en el medio',     description: 'Más control y pressing',            attackMod: 1.12, defenseMod: 1.18 },
+      { id: 'defender', label: '🔄 Reforzar atrás',         description: 'Cerrar la línea defensiva',         attackMod: 0.78, defenseMod: 1.48 },
+    ],
+  },
+]
+
+const SEGMENT_RANGES = [
+  { from: 1,  to: 30 },
+  { from: 31, to: 65 },
+  { from: 66, to: 90 },
+] as const
+
+export function computeBaseXG(mySquad: Player[], rival: RivalTeam): { homeXG: number; awayXG: number } {
+  const myAtk = avgOverall(mySquad.filter(p => p.position === 'DEL')) * 0.6 +
+                avgOverall(mySquad.filter(p => p.position === 'MED')) * 0.4
+  const myDef = avgOverall(mySquad.filter(p => p.position === 'DEF')) * 0.7 +
+                avgOverall(mySquad.filter(p => p.position === 'ARQ')) * 0.3
+  const rvAtk = avgOverall(rival.players.filter(p => p.position === 'DEL')) * 0.6 +
+                avgOverall(rival.players.filter(p => p.position === 'MED')) * 0.4
+  const rvDef = avgOverall(rival.players.filter(p => p.position === 'DEF')) * 0.7 +
+                avgOverall(rival.players.filter(p => p.position === 'ARQ')) * 0.3
+  return {
+    homeXG: Math.max(0.3, Math.min(3.5, 1.5 + (myAtk - rvDef) / 80)),
+    awayXG: Math.max(0.3, Math.min(3.5, 1.5 + (rvAtk - myDef) / 80)),
+  }
+}
+
+export function simulateSegment(
+  mySquad: Player[],
+  rival: RivalTeam,
+  seed: number,
+  segmentIdx: 0 | 1 | 2,
+  homeXG: number,
+  awayXG: number,
+  attackMod = 1,
+  defenseMod = 1,
+): { events: MatchEvent[]; myGoals: number; rivalGoals: number } {
+  const { from, to } = SEGMENT_RANGES[segmentIdx]
+  const duration = to - from + 1
+  const fraction = duration / 90
+  const rand = lcg(seed)
+
+  const segHomeXG = homeXG * fraction * attackMod
+  const segAwayXG = awayXG * fraction / defenseMod
+
+  const myGoals    = poissonSample(Math.max(0.05, segHomeXG), rand)
+  const rivalGoals = poissonSample(Math.max(0.05, segAwayXG), rand)
+
+  const usedMinutes = new Set<number>()
+  function pickMinute(): number {
+    let m: number
+    do { m = from + Math.floor(rand() * duration) } while (usedMinutes.has(m))
+    usedMinutes.add(m)
+    return m
+  }
+
+  const events: MatchEvent[] = []
+  for (let i = 0; i < myGoals;    i++) events.push({ minute: pickMinute(), type: 'goal', playerName: weightedPick(mySquad,       rand), side: 'home' })
+  for (let i = 0; i < rivalGoals; i++) events.push({ minute: pickMinute(), type: 'goal', playerName: weightedPick(rival.players, rand), side: 'away' })
+
+  const extraCount = 1 + Math.floor(rand() * 3)
+  const nonGoal: EventType[] = ['save', 'shot_off', 'corner', 'offside']
+  for (let i = 0; i < extraCount; i++) {
+    const side = rand() < 0.55 ? 'home' : 'away'
+    const pool = side === 'home' ? mySquad : rival.players
+    events.push({ minute: pickMinute(), type: nonGoal[Math.floor(rand() * nonGoal.length)], playerName: weightedPick(pool, rand), side })
+  }
+  if (rand() < 0.35) {
+    const side = rand() < 0.5 ? 'home' : 'away'
+    const pool = side === 'home' ? mySquad : rival.players
+    events.push({ minute: pickMinute(), type: 'foul', playerName: randomPick(pool, rand), side })
+  }
+
+  events.sort((a, b) => a.minute - b.minute)
+  return { events, myGoals, rivalGoals }
+}
+
+// ── Classic simulation (Sim mode) ─────────────────────────────────────────
+
 export function simulateMatch(mySquad: Player[], rival: RivalTeam, seed: number): MatchResult {
   const rand = lcg(seed)
 
@@ -131,4 +241,65 @@ export function simulateMatch(mySquad: Player[], rival: RivalTeam, seed: number)
   events.sort((a, b) => a.minute - b.minute)
 
   return { myGoals, rivalGoals, events, myOverall, rivalOverall }
+}
+
+// ── Microservice integration ───────────────────────────────────────────────────
+
+interface EngineEvent {
+  side: 'home' | 'away'
+  type: 'goal' | 'yellow_card' | 'red_card'
+  player: string
+  minute: number
+}
+
+interface EngineRepMatch {
+  events: EngineEvent[]
+  score_home: number
+  score_away: number
+}
+
+interface EngineResult {
+  representative_match: EngineRepMatch | null
+  avg_goals_home: number
+  avg_goals_away: number
+}
+
+function mapEngineEvent(e: EngineEvent): MatchEvent {
+  const typeMap: Record<string, EventType> = { goal: 'goal', yellow_card: 'yellow', red_card: 'foul' }
+  return { minute: e.minute, type: (typeMap[e.type] ?? 'foul') as EventType, playerName: e.player, side: e.side }
+}
+
+export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: number): Promise<MatchResult> {
+  const url = (import.meta.env.VITE_SIM_ENGINE_URL as string | undefined)?.replace(/\/$/, '')
+  if (!url) throw new Error('VITE_SIM_ENGINE_URL no configurada')
+
+  const body = {
+    home_team: 'Tu Equipo',
+    away_team: rival.name,
+    tactics_home: { formation: null, mentality: 'equilibrada', intensity: 'media', captain_id: null },
+    tactics_away: { formation: rival.formation ?? null, mentality: 'equilibrada', intensity: 'media', captain_id: null },
+    home: mySquad.map(p => ({ id: null, name: p.name, position: p.position, minutes: Math.max(p.minutes, 1) })),
+    away: rival.players.map(p => ({ id: null, name: p.name, position: p.position, minutes: Math.max(p.minutes, 1) })),
+    n_sims: 5000,
+    seed,
+  }
+
+  const res = await fetch(`${url}/simulate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+  if (!res.ok) throw new Error(`Motor: ${res.status} ${await res.text()}`)
+
+  const data = await res.json() as EngineResult
+  const rep = data.representative_match
+
+  return {
+    myGoals:       rep?.score_home ?? Math.round(data.avg_goals_home),
+    rivalGoals:    rep?.score_away ?? Math.round(data.avg_goals_away),
+    events:        (rep?.events ?? []).map(mapEngineEvent).sort((a, b) => a.minute - b.minute),
+    myOverall:     Math.round(avgOverall(mySquad)),
+    rivalOverall:  Math.round(avgOverall(rival.players)),
+  }
 }

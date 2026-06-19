@@ -3,8 +3,9 @@ import Home from './pages/Home'
 import Draft from './pages/Draft'
 import SimResult from './pages/SimResult'
 import Adventure from './pages/Adventure'
-import { simulateMatch } from './lib/simulation'
+import { simulateMatch, callSimEngine } from './lib/simulation'
 import { getDailyChallenge, getAdventureRivals, teamDisplayName } from './lib/players'
+import { getRemainingAttempts, consumeAttempt, resetAttempts } from './lib/attempts'
 import type { GameMode, Player, DailyChallenge, RivalTeam } from './types'
 import type { MatchResult } from './lib/simulation'
 
@@ -21,6 +22,8 @@ export default function App() {
   const [challenge, setChallenge] = useState<DailyChallenge | null>(null)
   const [simResult, setSimResult] = useState<MatchResult | null>(null)
   const [adventureRivals, setAdventureRivals] = useState<RivalTeam[]>([])
+  const [simAttempts, setSimAttempts] = useState(() => getRemainingAttempts('sim'))
+  const [adventureAttempts, setAdventureAttempts] = useState(() => getRemainingAttempts('adventure'))
 
   function handlePlay(selectedMode: GameMode) {
     setMode(selectedMode)
@@ -32,10 +35,12 @@ export default function App() {
     setChallenge(ch)
 
     if (mode === 'sim') {
-      const result = simulateMatch(confirmedSquad, ch.rival, dateSeed())
-      setSimResult(result)
+      consumeAttempt('sim')
+      setSimAttempts(getRemainingAttempts('sim'))
       setScreen('sim-loading')
     } else {
+      consumeAttempt('adventure')
+      setAdventureAttempts(getRemainingAttempts('adventure'))
       const rivals = getAdventureRivals(allPlayers)
       setAdventureRivals(rivals)
       setScreen('adventure')
@@ -67,8 +72,13 @@ export default function App() {
   if (screen === 'sim-loading' && challenge) {
     return (
       <SimLoading
+        squad={squad}
         rival={challenge.rival}
-        onDone={() => setScreen('sim-result')}
+        seed={dateSeed()}
+        onDone={(result) => {
+          setSimResult(result)
+          setScreen('sim-result')
+        }}
       />
     )
   }
@@ -78,6 +88,7 @@ export default function App() {
       <SimResult
         result={simResult}
         rival={challenge.rival}
+        remainingAttempts={simAttempts}
         onBack={goHome}
         onReplay={replay}
       />
@@ -90,13 +101,27 @@ export default function App() {
         squad={squad}
         rivals={adventureRivals}
         dateSeed={dateSeed()}
+        remainingAttempts={adventureAttempts}
         onBack={goHome}
         onReplay={replay}
       />
     )
   }
 
-  return <Home onPlay={handlePlay} />
+  function handleResetAttempts() {
+    resetAttempts()
+    setSimAttempts(getRemainingAttempts('sim'))
+    setAdventureAttempts(getRemainingAttempts('adventure'))
+  }
+
+  return (
+    <Home
+      onPlay={handlePlay}
+      simAttempts={simAttempts}
+      adventureAttempts={adventureAttempts}
+      onResetAttempts={handleResetAttempts}
+    />
+  )
 }
 
 // Bridge component that loads players and passes them up on confirm
@@ -131,11 +156,20 @@ function DraftBridge({
   return <Draft mode={mode} onBack={onBack} onConfirm={handleConfirm} />
 }
 
-function SimLoading({ rival, onDone }: { rival: RivalTeam; onDone: () => void }) {
+function SimLoading({ squad, rival, seed, onDone }: {
+  squad: Player[]
+  rival: RivalTeam
+  seed: number
+  onDone: (result: MatchResult) => void
+}) {
   useEffect(() => {
-    const id = setTimeout(onDone, 2200)
-    return () => clearTimeout(id)
-  }, [onDone])
+    callSimEngine(squad, rival, seed)
+      .then(result => onDone(result))
+      .catch(err => {
+        console.warn('[SimEngine] Fallback a simulación local:', err)
+        onDone(simulateMatch(squad, rival, seed))
+      })
+  }, [])
 
   return (
     <div
