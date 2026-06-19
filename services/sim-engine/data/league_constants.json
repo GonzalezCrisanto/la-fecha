@@ -1,5 +1,5 @@
 {
-  "_note_cards": "Parámetros de tarjetas son estimaciones — el dataset no tiene datos directos. yellow_per_foul calibrado para ~3.5 amarillas/equipo/partido (mean_team_fouls≈12.5 × 0.28 ≈ 3.5). red_base_prob calibrado a 0.0025 (multiplicadores apilados → ~0.035 rojas/equipo/partido).",
+  "_note_cards": "yellow_per_foul calibrado para ~1.75 amarillas/equipo/partido (mean_team_fouls≈12.5 × 0.14 ≈ 1.75). Target real LPF: 3-4 totales por partido (~1.5-2 por equipo). red_base_prob 0.0025 → ~0.035 rojas/equipo/partido.",
   "goals_home_mean": 1.1402,
   "goals_away_mean": 0.8785,
   "league_avg_goals": 1.0093,
@@ -158,8 +158,8 @@
       "n_matches": 15
     }
   },
-  "yellow_per_foul": 0.28,
-  "yellow_prob_cap": 0.7,
+  "yellow_per_foul": 0.14,
+  "yellow_prob_cap": 0.45,
   "red_base_prob": 0.0025,
   "red_position_multiplier": {
     "ARQ": 0.2,

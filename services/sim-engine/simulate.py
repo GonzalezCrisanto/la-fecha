@@ -743,7 +743,7 @@ def calibrate(n_sims=10_000):
     print(f" Win probs  local/empate/visitante: "
           f"{outcomes['home']/n_sims:.1%} / {outcomes['draw']/n_sims:.1%} / {outcomes['away']/n_sims:.1%}")
     print()
-    print(f" Amarillas / equipo : {avg_yh:.2f}  (target: 3.0–4.0)")
+    print(f" Amarillas / equipo : {avg_yh:.2f}  (target: 1.0–2.5)")
     print(f" Rojas     / equipo : {avg_rh:.4f}  (target: 0.015–0.080)")
     print()
     print(" Top 10 marcadores:")
@@ -753,7 +753,7 @@ def calibrate(n_sims=10_000):
     print()
     avg_g = (avg_sh + avg_sa) / 2
     ok_g  = abs(avg_g - league_target) / league_target < 0.15
-    ok_y  = 3.0 <= avg_yh <= 4.5
+    ok_y  = 1.0 <= avg_yh <= 2.5
     ok_r  = 0.015 <= avg_rh <= 0.08
     print(f" {'✅' if ok_g else '⚠️ '} Goles {'en rango' if ok_g else 'FUERA de rango'} (±15% del target {league_target:.3f}): {avg_g:.3f}")
     print(f" {'✅' if ok_y else '⚠️ '} Amarillas {'en rango' if ok_y else 'FUERA de rango'}: {avg_yh:.2f}/equipo")
