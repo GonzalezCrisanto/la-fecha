@@ -264,11 +264,6 @@ interface EngineResult {
   avg_goals_away: number
 }
 
-function mapEngineEvent(e: EngineEvent): MatchEvent {
-  const typeMap: Record<string, EventType> = { goal: 'goal', yellow_card: 'yellow', red_card: 'foul' }
-  return { minute: e.minute, type: (typeMap[e.type] ?? 'foul') as EventType, playerName: e.player, side: e.side }
-}
-
 export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: number): Promise<MatchResult> {
   const url = (import.meta.env.VITE_SIM_ENGINE_URL as string | undefined)?.replace(/\/$/, '')
   if (!url) throw new Error('VITE_SIM_ENGINE_URL no configurada')
@@ -295,11 +290,23 @@ export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: n
   const data = await res.json() as EngineResult
   const rep = data.representative_match
 
+  const myGoals    = rep?.score_home ?? Math.round(data.avg_goals_home)
+  const rivalGoals = rep?.score_away ?? Math.round(data.avg_goals_away)
+
+  const engineEvents = (rep?.events ?? [])
+    .map(e => ({
+      minute:     e.minute,
+      type:       ({ goal: 'goal', yellow_card: 'yellow', red_card: 'foul' } as Record<string, EventType>)[e.type] ?? 'foul',
+      playerName: e.player,
+      side:       e.side,
+    } as MatchEvent))
+    .sort((a, b) => a.minute - b.minute)
+
   return {
-    myGoals:       rep?.score_home ?? Math.round(data.avg_goals_home),
-    rivalGoals:    rep?.score_away ?? Math.round(data.avg_goals_away),
-    events:        (rep?.events ?? []).map(mapEngineEvent).sort((a, b) => a.minute - b.minute),
-    myOverall:     Math.round(avgOverall(mySquad)),
-    rivalOverall:  Math.round(avgOverall(rival.players)),
+    myGoals,
+    rivalGoals,
+    events:       engineEvents,
+    myOverall:    Math.round(avgOverall(mySquad)),
+    rivalOverall: Math.round(avgOverall(rival.players)),
   }
 }

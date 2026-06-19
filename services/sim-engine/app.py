@@ -59,9 +59,15 @@ def simulate(match: MatchInput):
     """Runs n_sims Monte Carlo iterations and returns stats + Spanish narration."""
     random.seed(match.seed)
 
+    def to_player(p: PlayerInput) -> dict:
+        d = p.model_dump()
+        if d.get("id") is None:
+            d["generic"] = True
+        return d
+
     result = simulate_match(
-        [p.model_dump() for p in match.home],
-        [p.model_dump() for p in match.away],
+        [to_player(p) for p in match.home],
+        [to_player(p) for p in match.away],
         home_team=match.home_team,
         away_team=match.away_team,
         tactics_home=match.tactics_home.model_dump(),
