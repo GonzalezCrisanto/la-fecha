@@ -447,8 +447,8 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
                        home_team=home_team, away_team=away_team, sh=sh, sa=sa),
     })
 
-    # ── Figura del partido ────────────────────────────────────────────────────
-    figura, fig_side = compute_figura(rep_match, sh, sa)
+    # ── Figura del partido (solo en partido completo) ────────────────────────
+    figura, fig_side = (None, None) if is_second_half else compute_figura(rep_match, sh, sa)
     if figura:
         fig_team = home_team if fig_side == "home" else away_team
         ga       = sa if fig_side == "home" else sh
