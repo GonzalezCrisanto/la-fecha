@@ -64,7 +64,7 @@ export default function Adventure({ squad, rivals, remainingAttempts, onBack, on
   const [strategy, setStrategy]                   = useState<GameStrategy>('balanced')
   const [recentPrimaryIds, setRecentPrimaryIds]   = useState<string[]>([])
   const [recentDefenderIds, setRecentDefenderIds] = useState<string[]>([])
-  const [roundResults, setRoundResults] = useState<{ my: number; rival: number }[]>([])
+  const [, setRoundResults] = useState<{ my: number; rival: number }[]>([])
   const [round, setRound]               = useState(0)
 
   const busy    = useRef(false)
@@ -488,7 +488,7 @@ export default function Adventure({ squad, rivals, remainingAttempts, onBack, on
       >
         <p className="text-label-caps text-[#859585] px-1 mb-1">CRÓNICA</p>
         {feed.map(entry => (
-          <FeedCard key={entry.id} entry={entry} rivalName={rivalName} />
+          <FeedCard key={entry.id} entry={entry} />
         ))}
       </div>
 
@@ -511,7 +511,7 @@ export default function Adventure({ squad, rivals, remainingAttempts, onBack, on
 
 // ── FeedCard ─────────────────────────────────────────────────────────────────
 
-function FeedCard({ entry, rivalName }: { entry: FeedEntry; rivalName: string }) {
+function FeedCard({ entry }: { entry: FeedEntry }) {
   if (entry.kind === 'round-start') {
     return (
       <div

@@ -89,7 +89,7 @@ export default function Multiplayer({ onBack }: Props) {
     }
 
     ws.onmessage = (ev) => {
-      const msg = JSON.parse(ev.data) as { type: string; code?: string; role?: 'home' | 'away'; message?: string } & Partial<WsStart>
+      const msg = JSON.parse(ev.data) as { type: string; code?: string; role?: 'home' | 'away'; message?: string; homeStrategy?: string; awayStrategy?: string }
 
       if (msg.type === 'created') {
         roleRef.current = 'home'
@@ -262,7 +262,7 @@ export default function Multiplayer({ onBack }: Props) {
           {cfg && (
             <div className="rounded-xl px-4 py-3 w-full max-w-sm" style={{ background: '#1d2025', border: '1px solid #3b4a3d' }}>
               <p className="text-body-sm font-semibold text-[#e1e2ea]">{cfg.label}</p>
-              <p className="text-label-caps text-[#859585] mt-1">{cfg.desc}</p>
+              <p className="text-label-caps text-[#859585] mt-1">{cfg.pros[0]}</p>
             </div>
           )}
           <button

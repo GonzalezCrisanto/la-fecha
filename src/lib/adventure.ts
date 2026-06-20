@@ -458,7 +458,7 @@ export function applyOutcome(
   dp: DecisionPoint,
   outcome: ActionOutcome,
   lineupHome: Player[],
-  lineupAway: Player[],
+  _lineupAway: Player[],
 ): void {
   const attackerSide = dp.attackingSide
   const defenderSide: 'home' | 'away' = attackerSide === 'home' ? 'away' : 'home'
@@ -761,7 +761,7 @@ function extractJson(raw: string): Record<string, unknown> | null {
 
 // ── Narration helpers ─────────────────────────────────────────────────────────
 
-function matchContext(scoreHome: number, scoreAway: number, minute: number, userSide: 'home'): string {
+function matchContext(scoreHome: number, scoreAway: number, minute: number, _userSide: 'home'): string {
   const myGoals  = scoreHome
   const oppGoals = scoreAway
   const diff     = myGoals - oppGoals

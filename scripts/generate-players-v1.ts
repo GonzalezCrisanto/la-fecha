@@ -90,20 +90,6 @@ function num(val: string | undefined): number {
   return isNaN(n) ? 0 : n;
 }
 
-/** Min-max scale val into [outMin, outMax]; returns outMin if all equal */
-function minMax(val: number, min: number, max: number, outMin = 0, outMax = 1): number {
-  if (max === min) return outMin;
-  return outMin + ((val - min) / (max - min)) * (outMax - outMin);
-}
-
-/** Log10 min-max scale — better for power-law distributions like market values */
-function logMinMax(val: number, min: number, max: number, outMin = 1, outMax = 100): number {
-  if (max === min) return outMin;
-  const logVal = Math.log10(val);
-  const logMin = Math.log10(min);
-  const logMax = Math.log10(max);
-  return Math.round(outMin + ((logVal - logMin) / (logMax - logMin)) * (outMax - outMin));
-}
 
 /** Percentile rank 1–99 of val within a sorted (ascending) array */
 function percentileRank(sorted: number[], val: number): number {
