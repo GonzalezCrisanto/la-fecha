@@ -55,7 +55,7 @@ function zoneProximity(a: PenaltyZone, b: PenaltyZone): 'exact' | 'adjacent' | '
 
 export function shooterSkill(p: Player): number {
   const goalRate = p.minutes > 0 ? p.goals / p.minutes : 0
-  return Math.min(0.90, Math.max(0.60, 0.70 + (p.overall - 65) / 120 + goalRate * 3))
+  return Math.min(0.90, Math.max(0.60, 0.70 + (p.overall - 70) / 120 + goalRate * 3))
 }
 
 export function gkSkill(gk: Player): number {

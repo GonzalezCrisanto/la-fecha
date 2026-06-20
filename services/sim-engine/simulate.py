@@ -478,6 +478,10 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
         side_assists = [0] * len(lineup)
         for i, (player, goals) in enumerate(zip(lineup, goal_dist)):
             if goals > 0:
+                _, red, red_min, _, _ = cards[i]
+                # Goals cannot happen after the player's red card minute
+                goal_end = max(start_minute, red_min - 1) if red and red_min else end_minute
+
                 asst_counts, asst_per_goal = distribute_assists(goals, asst_wts, i)
                 for j, a in enumerate(asst_counts):
                     side_assists[j] += a
@@ -493,7 +497,7 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
                         "type":     "goal",
                         "player":   scorer_name,
                         "assister": assister_name,
-                        "minute":   random.randint(start_minute, end_minute),
+                        "minute":   random.randint(start_minute, goal_end),
                     })
 
         for i, (player, goals) in enumerate(zip(lineup, goal_dist)):
@@ -606,10 +610,12 @@ def simulate_match(home_lineup, away_lineup, home_team="", away_team="",
     total_yh = total_ya = 0
     total_rh = total_ra = 0
 
+    last_m = None
     for _ in range(n_sims):
         m  = simulate_one(home_lineup, away_lineup, home_team, away_team,
                           tactics_home, tactics_away, start_minute, end_minute,
                           booked_home, booked_away)
+        last_m = m
         sh, sa = m["score_home"], m["score_away"]
         score_dist[f"{sh}-{sa}"] += 1
         outcomes["home" if sh > sa else "draw" if sh == sa else "away"] += 1
@@ -640,15 +646,15 @@ def simulate_match(home_lineup, away_lineup, home_team="", away_team="",
                 a["_name"]        = p["name"]
                 a["_pos"]         = p["position"]
 
-    # Partido representativo: una muestra al azar de la distribución.
-    # Antes buscábamos el marcador modal (re-simulando hasta encontrarlo), lo que
-    # producía siempre el mismo resultado para el mismo enfrentamiento.
-    # Ahora corremos un único simulate_one; el seed aleatorio por request garantiza
-    # variedad entre partidos. win_probs y score_distribution siguen siendo las
-    # métricas agregadas de las n_sims (no cambian).
-    rep_match = simulate_one(home_lineup, away_lineup, home_team, away_team,
-                             tactics_home, tactics_away, start_minute, end_minute,
-                             booked_home, booked_away)
+    # When n_sims=1 reuse the single loop result to avoid an extra simulate_one call.
+    # For n_sims>1 run a fresh simulate_one so the representative match is independent
+    # of the aggregation sample and seed-driven for variety between matches.
+    if n_sims == 1 and last_m is not None:
+        rep_match = last_m
+    else:
+        rep_match = simulate_one(home_lineup, away_lineup, home_team, away_team,
+                                 tactics_home, tactics_away, start_minute, end_minute,
+                                 booked_home, booked_away)
 
     def summarize(side):
         out = []

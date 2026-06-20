@@ -61,6 +61,21 @@ TEMPLATES = {
 
         "¡GOOOL a los {min}'! {assister} vio el movimiento de {scorer} y la asistencia fue perfecta. "
         "Tablero: {home_team} {sh} – {sa} {away_team}.",
+
+        "Combinación de lujo a los {min}': {assister} la filtró entre líneas y {scorer} la empujó al fondo. "
+        "{home_team} {sh} – {sa} {away_team}.",
+
+        "¡{scorer} apareció en el momento justo a los {min}'! El centro de {assister} fue preciso. "
+        "Marcador: {home_team} {sh} – {sa} {away_team}.",
+
+        "A los {min}' {assister} desbordó y centró; {scorer} no tuvo piedad. "
+        "{home_team} {sh} – {sa} {away_team}.",
+
+        "¡Qué jugada colectiva a los {min}'! {assister} la puso en bandeja y {scorer} definió solo. "
+        "{home_team} {sh} – {sa} {away_team}.",
+
+        "Golazo a los {min}'. {assister} abrió la cancha y encontró a {scorer} que la clavó sin parar la pelota. "
+        "Parcial: {home_team} {sh} – {sa} {away_team}.",
     ],
 
     "gol_sin_asistencia": [
@@ -78,6 +93,21 @@ TEMPLATES = {
 
         "{scorer} no desperdició la chance y marcó a los {min}'. "
         "{home_team} {sh} – {sa} {away_team}.",
+
+        "¡{scorer} encaró solo y la puso abajo a los {min}'! No había nada que hacer. "
+        "{home_team} {sh} – {sa} {away_team}.",
+
+        "A los {min}' {scorer} agarró la pelota de media vuelta y la mandó al ángulo. Golazo. "
+        "{home_team} {sh} – {sa} {away_team}.",
+
+        "¡Gol de {scorer} a los {min}'! Tiro libre impecable, el arquero no llegó ni a verla. "
+        "{home_team} {sh} – {sa} {away_team}.",
+
+        "{scorer} gambeteó a dos y la colocó al segundo palo a los {min}'. De lujo. "
+        "{home_team} {sh} – {sa} {away_team}.",
+
+        "¡{min}' — {scorer} reventó el travesaño… y entró! El público enloquece. "
+        "{home_team} {sh} – {sa} {away_team}.",
     ],
 
     "amarilla": [
@@ -86,6 +116,11 @@ TEMPLATES = {
         "El árbitro le mostró la cartulina amarilla a {player} ({team}) a los {min}'.",
         "Amarilla para {player} de {team} a los {min}'. Tiene que cuidarse de ahora en más.",
         "{min}' — Amonestado {player} ({team}). La presión del partido se hace sentir.",
+        "Cartulina amarilla para {player} ({team}) a los {min}'. Demasiada dureza en esa entrada.",
+        "{player} de {team} se gana la amarilla a los {min}'. Una falta innecesaria.",
+        "{min}' — El árbitro para el juego y saca la amarilla para {player} ({team}).",
+        "Amarilla polémica para {player} ({team}) a los {min}'. El banco protestó la decisión.",
+        "{player} ({team}) llega a la amonestación a los {min}'. Tendrá que bajar los decibeles.",
     ],
 
     "doble_amarilla": [
@@ -94,6 +129,11 @@ TEMPLATES = {
         "El árbitro le mostró la segunda tarjeta amarilla a {player} ({team}) a los {min}'. Que se vaya.",
         "¡Doble amarilla para {player} de {team} a los {min}'! El equipo deberá seguir con diez.",
         "{min}' — Segunda amarilla para {player} ({team}). Dos advertencias, una expulsión.",
+        "¡Se fue {player} ({team}) a los {min}'! Primera amarilla, segunda amarilla, y chau. Con diez.",
+        "El árbitro no tuvo dudas: segunda tarjeta para {player} ({team}) a los {min}'. A bañarse.",
+        "{min}' — {player} ({team}) no aprendió la lección. Doble amarilla y roja. {team} en inferioridad.",
+        "Adiós {player} de {team} a los {min}'. La segunda tarjeta lo deja afuera; el equipo sufre.",
+        "¡Increíble! {player} ({team}) repite la falta a los {min}' y el árbitro no tiene piedad. Con diez.",
     ],
 
     "roja": [
@@ -111,6 +151,12 @@ TEMPLATES = {
 
         "{player} se va al vestuario antes de tiempo a los {min}'. "
         "La decisión es lapidaria: {team} queda con diez.",
+
+        "¡Roja para {player} ({team}) a los {min}'! Entrada criminal; el árbitro no tardó ni un segundo.",
+        "{min}' — Expulsión directa de {player} ({team}). Falta gravísima. {team} tendrá que sufrir.",
+        "¡Se fue {player} de {team} a los {min}'! Roja directa, sin escalas. El banco explota de bronca.",
+        "Brutal la entrada de {player} ({team}) a los {min}'. Ni lo dudó el árbitro: roja y a la ducha.",
+        "{min}' — {player} ({team}) pierde la cabeza y se va expulsado. {team} deberá remar cuesta arriba.",
     ],
 
     "save": [
@@ -337,12 +383,21 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
     events += synthesize_extra_events(rep_match, rng, start_minute, end_minute)
     events.sort(key=lambda e: e.get("minute", 0))
 
-    # Resolve minute collisions by nudging later events forward by 1
+    # Resolve minute collisions: nudge forward, but cap at end_minute and
+    # never push a first-half event (≤45) past minute 44 into the second half.
     seen_minutes: set[int] = set()
+    seen_minutes.add(45)   # reserve for halftime marker
     for ev in events:
         m = ev.get("minute", 0)
+        original_m = m
         while m in seen_minutes:
             m += 1
+        if m > end_minute:
+            # fell off the end — push backward from original instead
+            m = original_m
+            while m in seen_minutes:
+                m -= 1
+            m = max(start_minute, m)
         seen_minutes.add(m)
         ev["minute"] = m
 
@@ -456,8 +511,8 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
                        home_team=home_team, away_team=away_team, sh=sh, sa=sa),
     })
 
-    # ── Figura del partido (solo en partido completo) ────────────────────────
-    figura, fig_side = (None, None) if is_second_half else compute_figura(rep_match, sh, sa)
+    # ── Figura del partido ────────────────────────────────────────────────────
+    figura, fig_side = compute_figura(rep_match, sh, sa)
     if figura:
         fig_team = home_team if fig_side == "home" else away_team
         ga       = sa if fig_side == "home" else sh
@@ -466,6 +521,8 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
         narration.append({
             "minuto": 93,
             "tipo":   "figura",
+            "side":   fig_side,
+            "player": figura["name"],
             "texto":  (f"Figura del partido: {figura['name']} ({fig_team}). "
                        f"Rating: {figura['rating']:.1f} | {pts} pts fantasy. "
                        + (f"Anotó {figura['goals']} gol(es)." if figura['goals'] else

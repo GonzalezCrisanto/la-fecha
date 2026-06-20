@@ -27,6 +27,7 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
   const [phase, setPhase] = useState<Phase>('first')
   const [htScore, setHtScore] = useState({ home: 0, away: 0 })
   const [halfStrategy, setHalfStrategy] = useState<GameStrategy>(initialStrategy)
+  const [secondHalfError, setSecondHalfError] = useState(false)
 
   const visibleEvents = allEvents.slice(0, visibleCount)
   const isLive = phase !== 'second' || visibleCount < allEvents.length
@@ -55,10 +56,15 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
   }, [visibleCount, allEvents, phase])
 
   async function startSecondHalf() {
+    setSecondHalfError(false)
+    const firstHalfEvents = allEvents.slice(0, visibleCount)
+    const stKickoff: MatchEvent = {
+      minute: 46, type: 'kickoff', playerName: '', side: 'home',
+      text: '¡Arranca el segundo tiempo!',
+    }
     if (halfStrategy !== initialStrategy) {
       setPhase('loading-second-half')
       try {
-        const firstHalfEvents = allEvents.slice(0, visibleCount)
         const bookedHome = firstHalfEvents
           .filter(e => e.type === 'yellow' && e.side === 'home')
           .map(e => e.playerName)
@@ -70,10 +76,13 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
           htScore.home, htScore.away,
           bookedHome, bookedAway,
         )
-        setAllEvents([...firstHalfEvents, ...secondHalfEvents])
+        setAllEvents([...firstHalfEvents, stKickoff, ...secondHalfEvents])
       } catch {
-        // continue with existing events on error
+        setSecondHalfError(true)
+        setAllEvents([...firstHalfEvents, stKickoff, ...allEvents.slice(visibleCount)])
       }
+    } else {
+      setAllEvents([...firstHalfEvents, stKickoff, ...allEvents.slice(visibleCount)])
     }
     setPhase('second')
   }
@@ -98,7 +107,10 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
         style={{ background: '#1d2025', borderColor: '#3b4a3d' }}
       >
         <button
-          onClick={onBack}
+          onClick={() => {
+            if (isLive && !window.confirm('¿Salir? Vas a perder la simulación en curso.')) return
+            onBack()
+          }}
           className="text-body-sm text-[#bacbb9] hover:text-[#e1e2ea] transition-colors"
         >
           ← Inicio
@@ -141,7 +153,10 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
             <p className="text-label-caps text-[#859585] mb-1 truncate max-w-[100px]">
               {teamDisplayName(rival.name).toUpperCase()}
             </p>
-            <p className="text-[72px] font-black leading-none text-[#e1e2ea]">
+            <p
+              className="text-[72px] font-black leading-none transition-all"
+              style={{ color: isDone && !won && !drew ? '#75ff9e' : '#e1e2ea' }}
+            >
               {finalRivalGoals}
             </p>
           </div>
@@ -187,9 +202,17 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
           className="shrink-0 px-4 pt-4 pb-5 border-t flex flex-col gap-4"
           style={{ background: '#1d2025', borderColor: '#3b4a3d' }}
         >
-          <div>
-            <p className="text-label-caps text-[#ffde6e] mb-1">DESCANSO · ELEGÍ TU TÁCTICA PARA EL ST</p>
-            <p className="text-body-sm text-[#859585]">Podés mantener o cambiar la estrategia para el segundo tiempo.</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-label-caps text-[#ffde6e] mb-1">DESCANSO · ELEGÍ TU TÁCTICA PARA EL ST</p>
+              <p className="text-body-sm text-[#859585]">Podés mantener o cambiar la estrategia para el segundo tiempo.</p>
+            </div>
+            <div className="text-center shrink-0 ml-3">
+              <p className="text-label-caps text-[#859585] mb-0.5">PT</p>
+              <p className="text-headline-lg font-black text-[#ffde6e] leading-none">
+                {htScore.home} – {htScore.away}
+              </p>
+            </div>
           </div>
           <StrategyPicker current={halfStrategy} onSelect={setHalfStrategy} />
           {cfg && (
@@ -209,6 +232,16 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
           >
             {halfStrategy !== initialStrategy ? '🔄 Cambiar táctica y arrancar ST →' : 'Arrancar segundo tiempo →'}
           </button>
+        </div>
+      )}
+
+      {/* Second half error banner */}
+      {secondHalfError && phase === 'second' && (
+        <div
+          className="shrink-0 px-4 py-2 text-center text-body-sm"
+          style={{ background: '#3a0a0a', color: '#ffb4ab' }}
+        >
+          ⚠️ No se pudo simular el segundo tiempo. Continuando con los eventos originales.
         </div>
       )}
 
@@ -312,15 +345,17 @@ const EVENT_META: Record<EventType, { icon: string; label: (player: string, isHo
   halftime: { icon: '⏸',  label: ()   => 'Fin del primer tiempo',   highlight: '#1d2025'   },
   fulltime: { icon: '🏁', label: ()   => 'Pitazo final',            highlight: '#1d2025'   },
   motm:     { icon: '⭐', label: (p)  => `Figura: ${p}`,            highlight: '#2a2500'   },
+  kickoff:  { icon: '🔔', label: ()   => '¡Comenzó el partido!',    highlight: '#1d2025'   },
+  summary:  { icon: '📋', label: ()   => 'Resumen del partido',      highlight: '#151a1e'   },
 }
 
 function EventRow({ event, isNew }: { event: MatchEvent; isNew: boolean }) {
   const isHome   = event.side === 'home'
   const meta     = EVENT_META[event.type]
   const isGoal   = event.type === 'goal'
-  const isGlobal = event.type === 'halftime' || event.type === 'fulltime' || event.type === 'motm'
+  const isGlobal = event.type === 'halftime' || event.type === 'fulltime' || event.type === 'motm' || event.type === 'kickoff' || event.type === 'summary'
 
-  const minuteLabel = event.type === 'halftime' ? "45'" : event.type === 'fulltime' ? "90'" : `${event.minute}'`
+  const minuteLabel = event.type === 'halftime' ? "45'" : event.type === 'fulltime' ? "90'" : event.type === 'kickoff' ? "1'" : `${event.minute}'`
 
   return (
     <div

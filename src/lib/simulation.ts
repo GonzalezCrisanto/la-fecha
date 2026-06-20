@@ -2,7 +2,7 @@ import type { Player, RivalTeam } from '../types'
 
 export type EventType =
   | 'goal' | 'save' | 'shot_off' | 'corner' | 'offside' | 'foul' | 'yellow' | 'red' | 'double_yellow'
-  | 'halftime' | 'fulltime' | 'motm'
+  | 'halftime' | 'fulltime' | 'motm' | 'kickoff' | 'summary'
 
 export interface MatchEvent {
   minute: number
@@ -320,7 +320,7 @@ export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: n
     tactics_away: { formation: rival.formation ?? null, mentality: 'equilibrada', intensity: 'media', captain_id: null },
     home: mySquad.map(toEnginePlayer),
     away: rival.players.map(toEnginePlayer),
-    n_sims: 5000,
+    n_sims: 1,
     seed,
   }
 
@@ -342,11 +342,14 @@ export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: n
     gol:            'goal',
     amarilla:       'yellow',
     roja:           'red',
+    doble_amarilla: 'double_yellow',
     atajada:        'save',
     ocasion_errada: 'shot_off',
     entretiempo:    'halftime',
     pitazo_final:   'fulltime',
     figura:         'motm',
+    arranque:       'kickoff',
+    resumen:        'summary',
   }
 
   const events: MatchEvent[] = (data.narration ?? [])
@@ -388,7 +391,7 @@ export async function callSimEngineSecondHalf(
     tactics_away: { formation: rival.formation ?? null, mentality: 'equilibrada', intensity: 'media', captain_id: null },
     home: mySquad.map(toEnginePlayer),
     away: rival.players.map(toEnginePlayer),
-    n_sims: 5000,
+    n_sims: 1,
     seed,
     score_home: scoreHome,
     score_away: scoreAway,
@@ -410,6 +413,7 @@ export async function callSimEngineSecondHalf(
     gol: 'goal', amarilla: 'yellow', roja: 'red', doble_amarilla: 'double_yellow',
     atajada: 'save', ocasion_errada: 'shot_off',
     entretiempo: 'halftime', pitazo_final: 'fulltime', figura: 'motm',
+    arranque: 'kickoff', resumen: 'summary',
   }
 
   return (data.narration ?? [])
