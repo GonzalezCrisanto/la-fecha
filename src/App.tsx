@@ -3,6 +3,7 @@ import Home from './pages/Home'
 import Draft from './pages/Draft'
 import SimResult from './pages/SimResult'
 import Adventure from './pages/Adventure'
+import Multiplayer from './pages/Multiplayer'
 import PenaltyShootout from './pages/PenaltyShootout'
 import { StrategyPicker } from './pages/Adventure'
 import { simulateMatch, callSimEngine } from './lib/simulation'
@@ -13,7 +14,7 @@ import type { GameMode, Player, DailyChallenge, RivalTeam, Formation } from './t
 import type { MatchResult } from './lib/simulation'
 import type { GameStrategy } from './lib/adventure'
 
-type Screen = 'home' | 'draft' | 'sim-strategy' | 'sim-loading' | 'sim-result' | 'adventure' | 'penalty'
+type Screen = 'home' | 'draft' | 'sim-strategy' | 'sim-loading' | 'sim-result' | 'adventure' | 'penalty' | 'multiplayer'
 
 function dateSeed(): number {
   return new Date().toISOString().slice(0, 10).split('').reduce((a, c) => a + c.charCodeAt(0), 0)
@@ -33,7 +34,11 @@ export default function App() {
 
   function handlePlay(selectedMode: GameMode) {
     setMode(selectedMode)
-    setScreen('draft')
+    if (selectedMode === 'multiplayer') {
+      setScreen('multiplayer')
+    } else {
+      setScreen('draft')
+    }
   }
 
   function handleConfirm(confirmedSquad: Player[], formation: Formation, ch: DailyChallenge, allPlayers: Player[]) {
@@ -130,6 +135,10 @@ export default function App() {
         onBack={goHome}
       />
     )
+  }
+
+  if (screen === 'multiplayer') {
+    return <Multiplayer onBack={goHome} />
   }
 
   if (screen === 'adventure' && adventureRivals.length > 0) {

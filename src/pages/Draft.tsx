@@ -44,6 +44,12 @@ export default function Draft({ mode, onBack, onConfirm }: Props) {
           rival: rivals[0],
           blockedPlayerIds: blockedIds,
         })
+      } else if (mode === 'multiplayer') {
+        setChallenge({
+          date: new Date().toISOString().slice(0, 10),
+          rival: { name: 'Rival', players: [], formation: '4-3-3' },
+          blockedPlayerIds: [],
+        })
       } else {
         setChallenge(getDailyChallenge(players))
       }
@@ -133,9 +139,9 @@ export default function Draft({ mode, onBack, onConfirm }: Props) {
         </button>
         <div className="flex-1 text-center min-w-0 px-2">
           <p className="text-body-sm font-semibold text-[#e1e2ea]">
-            {mode === 'sim' ? '⚡ Simulación' : '🎮 Aventura'}
+            {mode === 'sim' ? '⚡ Simulación' : mode === 'adventure' ? '🎮 Aventura' : '🤝 Multijugador'}
           </p>
-          {challenge && (
+          {challenge && mode !== 'multiplayer' && (
             <p className="text-label-caps text-[#859585] truncate">
               vs {teamDisplayName(challenge.rival.name)}
             </p>
@@ -328,7 +334,7 @@ export default function Draft({ mode, onBack, onConfirm }: Props) {
             className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
             style={{ background: '#75ff9e', color: '#003918' }}
           >
-            {mode === 'sim' ? '⚡ Simular partido' : '🎮 Comenzar aventura'}
+            {mode === 'sim' ? '⚡ Simular partido' : mode === 'adventure' ? '🎮 Comenzar aventura' : '🤝 Enviar equipo'}
           </button>
         ) : (
           <div className="flex items-center justify-between px-1">

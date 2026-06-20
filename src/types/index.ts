@@ -30,4 +30,4 @@ export interface RivalTeam {
   formation: Formation
 }
 
-export type GameMode = 'sim' | 'adventure'
+export type GameMode = 'sim' | 'adventure' | 'multiplayer'

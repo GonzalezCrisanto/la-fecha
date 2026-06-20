@@ -83,6 +83,13 @@ export default function Home({ onPlay, simAttempts, adventureAttempts, onResetAt
         >
           🎮 Aventura
         </button>
+        <button
+          onClick={() => onPlay('multiplayer')}
+          className="w-full font-bold py-4 rounded-xl text-body-lg transition-all"
+          style={{ background: '#1d2025', border: '1px solid #75ff9e', color: '#75ff9e' }}
+        >
+          🤝 Multijugador
+        </button>
       </div>
 
       <p className="text-label-caps text-[#859585] capitalize">{today}</p>
