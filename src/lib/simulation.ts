@@ -310,14 +310,14 @@ const STRATEGY_MENTALITY: Record<string, string> = {
   counter:   'contraataque',
 }
 
-export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: number, strategy = 'balanced'): Promise<MatchResult> {
+export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: number, strategy = 'balanced', formation?: string): Promise<MatchResult> {
   const url = (import.meta.env.VITE_SIM_ENGINE_URL as string | undefined)?.replace(/\/$/, '')
   if (!url) throw new Error('VITE_SIM_ENGINE_URL no configurada')
 
   const body = {
     home_team: 'Tu Equipo',
     away_team: rival.name,
-    tactics_home: { formation: null, mentality: STRATEGY_MENTALITY[strategy] ?? 'equilibrada', intensity: 'media', captain_id: null },
+    tactics_home: { formation: formation ?? null, mentality: STRATEGY_MENTALITY[strategy] ?? 'equilibrada', intensity: 'media', captain_id: null },
     tactics_away: { formation: rival.formation ?? null, mentality: 'equilibrada', intensity: 'media', captain_id: null },
     home: mySquad.map(toEnginePlayer),
     away: rival.players.map(toEnginePlayer),
@@ -385,6 +385,7 @@ export async function callSimEngineSecondHalf(
   scoreAway: number,
   bookedHome: string[],
   bookedAway: string[],
+  formation?: string,
 ): Promise<MatchEvent[]> {
   const url = (import.meta.env.VITE_SIM_ENGINE_URL as string | undefined)?.replace(/\/$/, '')
   if (!url) throw new Error('VITE_SIM_ENGINE_URL no configurada')
@@ -392,7 +393,7 @@ export async function callSimEngineSecondHalf(
   const body = {
     home_team: 'Tu Equipo',
     away_team: rival.name,
-    tactics_home: { formation: null, mentality: STRATEGY_MENTALITY[strategy] ?? 'equilibrada', intensity: 'media', captain_id: null },
+    tactics_home: { formation: formation ?? null, mentality: STRATEGY_MENTALITY[strategy] ?? 'equilibrada', intensity: 'media', captain_id: null },
     tactics_away: { formation: rival.formation ?? null, mentality: 'equilibrada', intensity: 'media', captain_id: null },
     home: mySquad.map(toEnginePlayer),
     away: rival.players.map(toEnginePlayer),

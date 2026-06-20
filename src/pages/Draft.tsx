@@ -18,7 +18,7 @@ const BADGE_CLASS: Record<Position, string> = {
 interface Props {
   mode: GameMode
   onBack: () => void
-  onConfirm: (squad: Player[]) => void
+  onConfirm: (squad: Player[], formation: Formation) => void
 }
 
 export default function Draft({ mode, onBack, onConfirm }: Props) {
@@ -324,7 +324,7 @@ export default function Draft({ mode, onBack, onConfirm }: Props) {
       <div className="shrink-0 px-4 py-4 border-t" style={{ background: '#1d2025', borderColor: '#3b4a3d' }}>
         {isComplete ? (
           <button
-            onClick={() => onConfirm(squad)}
+            onClick={() => onConfirm(squad, formation)}
             className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
             style={{ background: '#75ff9e', color: '#003918' }}
           >

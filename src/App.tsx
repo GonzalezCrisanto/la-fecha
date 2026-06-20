@@ -9,7 +9,7 @@ import { simulateMatch, callSimEngine } from './lib/simulation'
 import { getDailyChallenge, getAdventureRivals, teamDisplayName } from './lib/players'
 import { getRemainingAttempts, consumeAttempt, resetAttempts } from './lib/attempts'
 import { STRATEGIES } from './lib/adventure'
-import type { GameMode, Player, DailyChallenge, RivalTeam } from './types'
+import type { GameMode, Player, DailyChallenge, RivalTeam, Formation } from './types'
 import type { MatchResult } from './lib/simulation'
 import type { GameStrategy } from './lib/adventure'
 
@@ -29,15 +29,17 @@ export default function App() {
   const [simAttempts, setSimAttempts] = useState(() => getRemainingAttempts('sim'))
   const [adventureAttempts, setAdventureAttempts] = useState(() => getRemainingAttempts('adventure'))
   const [simStrategy, setSimStrategy] = useState<GameStrategy>('balanced')
+  const [simFormation, setSimFormation] = useState<Formation>('4-3-3')
 
   function handlePlay(selectedMode: GameMode) {
     setMode(selectedMode)
     setScreen('draft')
   }
 
-  function handleConfirm(confirmedSquad: Player[], ch: DailyChallenge, allPlayers: Player[]) {
+  function handleConfirm(confirmedSquad: Player[], formation: Formation, ch: DailyChallenge, allPlayers: Player[]) {
     setSquad(confirmedSquad)
     setChallenge(ch)
+    setSimFormation(formation)
 
     if (mode === 'sim') {
       consumeAttempt('sim')
@@ -93,6 +95,7 @@ export default function App() {
         rival={challenge.rival}
         seed={dateSeed()}
         strategy={simStrategy}
+        formation={simFormation}
         onDone={(result) => {
           setSimResult(result)
           setScreen('sim-result')
@@ -109,6 +112,7 @@ export default function App() {
         squad={squad}
         seed={dateSeed()}
         initialStrategy={simStrategy}
+        formation={simFormation}
         remainingAttempts={simAttempts}
         onBack={goHome}
         onReplay={replay}
@@ -168,7 +172,7 @@ function DraftBridge({
 }: {
   mode: GameMode
   onBack: () => void
-  onConfirm: (squad: Player[], challenge: DailyChallenge, allPlayers: Player[]) => void
+  onConfirm: (squad: Player[], formation: Formation, challenge: DailyChallenge, allPlayers: Player[]) => void
 }) {
   const allPlayersRef = useRef<Player[]>([])
   const challengeRef = useRef<DailyChallenge | null>(null)
@@ -180,24 +184,25 @@ function DraftBridge({
     })
   }, [])
 
-  function handleConfirm(squad: Player[]) {
+  function handleConfirm(squad: Player[], formation: Formation) {
     if (challengeRef.current) {
-      onConfirm(squad, challengeRef.current, allPlayersRef.current)
+      onConfirm(squad, formation, challengeRef.current, allPlayersRef.current)
     }
   }
 
   return <Draft mode={mode} onBack={onBack} onConfirm={handleConfirm} />
 }
 
-function SimLoading({ squad, rival, seed, strategy, onDone }: {
+function SimLoading({ squad, rival, seed, strategy, formation, onDone }: {
   squad: Player[]
   rival: RivalTeam
   seed: number
   strategy: GameStrategy
+  formation: Formation
   onDone: (result: MatchResult) => void
 }) {
   useEffect(() => {
-    callSimEngine(squad, rival, seed, strategy)
+    callSimEngine(squad, rival, seed, strategy, formation)
       .then(result => onDone(result))
       .catch(err => {
         console.warn('[SimEngine] Fallback a simulación local:', err)

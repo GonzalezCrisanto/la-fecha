@@ -13,6 +13,7 @@ interface Props {
   squad: Player[]
   seed: number
   initialStrategy: GameStrategy
+  formation?: string
   remainingAttempts: number
   onBack: () => void
   onReplay: () => void
@@ -21,7 +22,7 @@ interface Props {
 
 type Phase = 'first' | 'halftime-break' | 'loading-second-half' | 'second'
 
-export default function SimResult({ result, rival, squad, seed, initialStrategy, remainingAttempts, onBack, onReplay, onPenalties }: Props) {
+export default function SimResult({ result, rival, squad, seed, initialStrategy, formation, remainingAttempts, onBack, onReplay, onPenalties }: Props) {
   const [allEvents, setAllEvents] = useState(result.events)
   const [visibleCount, setVisibleCount] = useState(0)
   const [phase, setPhase] = useState<Phase>('first')
@@ -83,6 +84,7 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
           squad, rival, seed, halfStrategy,
           htScore.home, htScore.away,
           bookedHome, bookedAway,
+          formation,
         )
         setAllEvents([...firstHalfEvents, stKickoff, ...secondHalfEvents])
       } catch {
