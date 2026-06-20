@@ -355,7 +355,11 @@ function EventRow({ event, isNew }: { event: MatchEvent; isNew: boolean }) {
   const isGoal   = event.type === 'goal'
   const isGlobal = event.type === 'halftime' || event.type === 'fulltime' || event.type === 'motm' || event.type === 'kickoff' || event.type === 'summary'
 
-  const minuteLabel = event.type === 'halftime' ? "45'" : event.type === 'fulltime' ? "90'" : event.type === 'kickoff' ? "1'" : `${event.minute}'`
+  const minuteLabel = event.type === 'halftime' ? "45'"
+    : event.type === 'fulltime' ? "90'+2"
+    : event.type === 'kickoff' ? (event.minute === 0 ? "1'" : `${event.minute}'`)
+    : event.type === 'motm' || event.type === 'summary' ? '—'
+    : `${event.minute}'`
 
   return (
     <div
