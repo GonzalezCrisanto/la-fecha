@@ -1,4 +1,4 @@
-import type { Player, Position, DailyChallenge, Formation } from '../types'
+import type { Player, Position, DailyChallenge, Formation, RivalTeam } from '../types'
 
 export const TEAM_DISPLAY_NAMES: Record<string, string> = {
   'Arg Juniors':     'Argentinos Juniors',
@@ -39,24 +39,14 @@ export function getDailyChallenge(players: Player[], dateStr?: string): DailyCha
 
   const teams = [...new Set(players.map(p => p.team))]
   const rivalTeamName = teams[seed % teams.length]
-  const rivalPlayers = buildRivalTeam(players, rivalTeamName, seed)
+  const rivalFormation = FORMATIONS[seed % FORMATIONS.length]
+  const rivalPlayers = buildRivalTeam(players, rivalTeamName, rivalFormation)
 
   return {
     date,
-    rival: {
-      name: rivalTeamName,
-      players: rivalPlayers,
-      formation: FORMATIONS[seed % FORMATIONS.length],
-    },
+    rival: { name: rivalTeamName, players: rivalPlayers, formation: rivalFormation },
     blockedPlayerIds: rivalPlayers.map(p => p.id),
   }
-}
-
-export const SQUAD_SLOTS: Record<Position, number> = {
-  ARQ: 1,
-  DEF: 4,
-  MED: 3,
-  DEL: 3,
 }
 
 export const FORMATION_SLOTS: Record<Formation, Record<Position, number>> = {
@@ -78,23 +68,30 @@ export function getAdventureRivals(players: Player[], dateStr?: string): RivalTe
   const date = dateStr ?? new Date().toISOString().slice(0, 10)
   const seed = hashDate(date)
   const teams = [...new Set(players.map(p => p.team))]
+  const used = new Set<string>()
   return [1, 2, 3].map(i => {
-    const s = seed + i * 31
-    const teamName = teams[s % teams.length]
+    const s = (seed + i * 31) >>> 0
+    // Skip teams already picked to guarantee 3 distinct rivals
+    let idx = s % teams.length
+    while (used.has(teams[idx])) idx = (idx + 1) % teams.length
+    const teamName = teams[idx]
+    used.add(teamName)
+    const formation = FORMATIONS[s % FORMATIONS.length]
     return {
       name: teamName,
-      players: buildRivalTeam(players, teamName, s),
-      formation: FORMATIONS[s % FORMATIONS.length],
+      players: buildRivalTeam(players, teamName, formation),
+      formation,
     }
   })
 }
 
 function hashDate(date: string): number {
-  return date.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
+  // Positional hash (djb2-style) — avoids anagram collisions like '2026-06-20' vs '2026-06-02'
+  return date.split('').reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) >>> 0, 17)
 }
 
-function buildRivalTeam(players: Player[], teamName: string, _seed: number): Player[] {
-  const slots: Record<Position, number> = { ARQ: 1, DEF: 4, MED: 3, DEL: 3 }
+function buildRivalTeam(players: Player[], teamName: string, formation: Formation): Player[] {
+  const slots = FORMATION_SLOTS[formation]
   const result: Player[] = []
   for (const [pos, count] of Object.entries(slots) as [Position, number][]) {
     const pool = players.filter(p => p.team === teamName && p.position === pos)
