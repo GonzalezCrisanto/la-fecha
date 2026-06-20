@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  loadPlayers, getDailyChallenge, playersByPosition,
+  loadPlayers, getDailyChallenge, getAdventureRivals, playersByPosition,
   FORMATION_SLOTS, BUDGET, MAX_PER_CLUB, teamDisplayName,
 } from '../lib/players'
 import type { Player, Position, GameMode, DailyChallenge, Formation } from '../types'
@@ -36,7 +36,17 @@ export default function Draft({ mode, onBack, onConfirm }: Props) {
   useEffect(() => {
     loadPlayers().then(players => {
       setAllPlayers(players)
-      setChallenge(getDailyChallenge(players))
+      if (mode === 'adventure') {
+        const rivals = getAdventureRivals(players)
+        const blockedIds = rivals.flatMap(r => r.players.map(p => p.id))
+        setChallenge({
+          date: new Date().toISOString().slice(0, 10),
+          rival: rivals[0],
+          blockedPlayerIds: blockedIds,
+        })
+      } else {
+        setChallenge(getDailyChallenge(players))
+      }
     })
   }, [])
 
@@ -87,8 +97,12 @@ export default function Draft({ mode, onBack, onConfirm }: Props) {
     }
   }
 
+  const normalize = (s: string) =>
+    s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  const q = normalize(search)
+
   const pool = playersByPosition(allPlayers, activePos)
-    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+    .filter(p => !q || normalize(p.name).includes(q) || normalize(p.team).includes(q))
     .filter(p => !challenge?.blockedPlayerIds.includes(p.id))
     .filter(p => !onlyAvailable || canAdd(p) || !!squad.find(s => s.id === p.id))
 
