@@ -64,6 +64,25 @@ wss.on('connection', (ws) => {
       }
     }
 
+    else if (msg.type === 'halftime_strategy') {
+      const room = rooms.get(ws.roomCode)
+      if (!room) return
+      if (ws.role === 'home') room.homeHalftimeStrategy = msg.strategy
+      else room.awayHalftimeStrategy = msg.strategy
+
+      if (room.homeHalftimeStrategy && room.awayHalftimeStrategy) {
+        const payload = {
+          type: 'second_half_go',
+          homeStrategy: room.homeHalftimeStrategy,
+          awayStrategy: room.awayHalftimeStrategy,
+        }
+        send(room.home, payload)
+        send(room.away, payload)
+        room.homeHalftimeStrategy = null
+        room.awayHalftimeStrategy = null
+      }
+    }
+
     else if (msg.type === 'ping') {
       send(ws, { type: 'pong' })
     }

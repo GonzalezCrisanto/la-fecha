@@ -15,6 +15,12 @@ interface Props {
   initialStrategy: GameStrategy
   formation?: string
   remainingAttempts: number
+  onHalftimeConfirm?: (
+    strategy: GameStrategy,
+    htScore: { home: number; away: number },
+    bookedHome: string[],
+    bookedAway: string[]
+  ) => Promise<MatchEvent[]>
   onBack: () => void
   onReplay: () => void
   onPenalties?: () => void
@@ -22,7 +28,7 @@ interface Props {
 
 type Phase = 'first' | 'halftime-break' | 'loading-second-half' | 'second'
 
-export default function SimResult({ result, rival, squad, seed, initialStrategy, formation, remainingAttempts, onBack, onReplay, onPenalties }: Props) {
+export default function SimResult({ result, rival, squad, seed, initialStrategy, formation, remainingAttempts, onHalftimeConfirm, onBack, onReplay, onPenalties }: Props) {
   const [allEvents, setAllEvents] = useState(result.events)
   const [visibleCount, setVisibleCount] = useState(0)
   const [phase, setPhase] = useState<Phase>('first')
@@ -71,15 +77,25 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
       minute: 46, type: 'kickoff', playerName: '', side: 'home',
       text: '¡Arranca el segundo tiempo!',
     }
+    const bookedHome = firstHalfEvents.filter(e => e.type === 'yellow' && e.side === 'home').map(e => e.playerName)
+    const bookedAway = firstHalfEvents.filter(e => e.type === 'yellow' && e.side === 'away').map(e => e.playerName)
+
+    if (onHalftimeConfirm) {
+      setPhase('loading-second-half')
+      try {
+        const secondHalfEvents = await onHalftimeConfirm(halfStrategy, htScore, bookedHome, bookedAway)
+        setAllEvents([...firstHalfEvents, stKickoff, ...secondHalfEvents])
+      } catch {
+        setSecondHalfError(true)
+        setAllEvents([...firstHalfEvents, stKickoff, ...allEvents.slice(visibleCount)])
+      }
+      setPhase('second')
+      return
+    }
+
     if (halfStrategy !== initialStrategy) {
       setPhase('loading-second-half')
       try {
-        const bookedHome = firstHalfEvents
-          .filter(e => e.type === 'yellow' && e.side === 'home')
-          .map(e => e.playerName)
-        const bookedAway = firstHalfEvents
-          .filter(e => e.type === 'yellow' && e.side === 'away')
-          .map(e => e.playerName)
         const secondHalfEvents = await callSimEngineSecondHalf(
           squad, rival, seed, halfStrategy,
           htScore.home, htScore.away,
@@ -173,8 +189,8 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
         </div>
         {isDone && (
           <div className="mt-3 flex justify-center gap-6 text-label-caps text-[#859585]">
-            <span>Tu equipo: <span className="text-[#75ff9e]">{result.myOverall}</span></span>
-            <span>Rival: <span className="text-[#e1e2ea]">{result.rivalOverall}</span></span>
+            <span>⭐ Calidad tuya: <span className="text-[#75ff9e]">{result.myOverall}</span>/99</span>
+            <span>⭐ Calidad rival: <span className="text-[#e1e2ea]">{result.rivalOverall}</span>/99</span>
           </div>
         )}
       </div>

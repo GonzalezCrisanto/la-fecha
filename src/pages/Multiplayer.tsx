@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import Draft from './Draft'
 import SimResult from './SimResult'
-import { callSimEngine, simulateMatch } from '../lib/simulation'
+import { callSimEngine, callSimEngineSecondHalf, simulateMatch } from '../lib/simulation'
 import { StrategyPicker } from './Adventure'
 import { STRATEGIES } from '../lib/adventure'
 import type { Player, Formation, RivalTeam } from '../types'
-import type { MatchResult } from '../lib/simulation'
+import type { MatchResult, MatchEvent } from '../lib/simulation'
 import type { GameStrategy } from '../lib/adventure'
 
 type MpScreen = 'lobby' | 'waiting-opponent' | 'drafting' | 'strategy' | 'waiting-squad' | 'loading' | 'result'
@@ -41,7 +41,33 @@ export default function Multiplayer({ onBack }: Props) {
   const formationRef = useRef<Formation>('4-3-3')
   const strategyRef = useRef<GameStrategy>('balanced')
 
+  // canonical match refs (set on 'start', used for second half)
+  const homeSquadRef = useRef<Player[]>([])
+  const awaySquadRef = useRef<Player[]>([])
+  const homeFormationRef = useRef<Formation>('4-3-3')
+  const seedRef = useRef(0)
+
+  // halftime coordination
+  const halftimeResolveRef = useRef<((events: MatchEvent[]) => void) | null>(null)
+  const halftimeRejectRef = useRef<(() => void) | null>(null)
+  const halftimeDataRef = useRef<{
+    scoreHome: number; scoreAway: number
+    bookedHome: string[]; bookedAway: string[]
+  } | null>(null)
+
   const wsUrl = (import.meta.env.VITE_WS_SERVER_URL as string | undefined)
+
+  function flipEvents(events: MatchEvent[]): MatchEvent[] {
+    const T = '\x00'
+    return events.map(e => ({
+      ...e,
+      side: e.side === 'home' ? 'away' as const : 'home' as const,
+      text: e.text
+        ?.replace(/Tu Equipo/g, T)
+        .replace(/Rival/g, 'Tu Equipo')
+        .replace(/\x00/g, 'Rival'),
+    }))
+  }
 
   useEffect(() => {
     return () => {
@@ -80,16 +106,64 @@ export default function Multiplayer({ onBack }: Props) {
       }
       else if (msg.type === 'start') {
         const { seed: s, home, away } = msg as WsStart
-        const myData = roleRef.current === 'home' ? home : away
-        const oppData = roleRef.current === 'home' ? away : home
-        const rivalTeam: RivalTeam = { name: 'Rival', players: oppData.squad, formation: oppData.formation }
+        const role = roleRef.current
+
+        // Store canonical refs for second half coordination
+        homeSquadRef.current = home.squad
+        awaySquadRef.current = away.squad
+        homeFormationRef.current = home.formation
+        seedRef.current = s
+
+        // Canonical simulation: always home=creator, away=joiner.
+        // Both clients run identical inputs → identical result.
+        const canonicalRival: RivalTeam = { name: 'Rival', players: away.squad, formation: away.formation }
         setSeed(s)
-        setRival(rivalTeam)
         setScreen('loading')
-        callSimEngine(myData.squad, rivalTeam, s, myData.strategy, myData.formation)
-          .catch(() => simulateMatch(myData.squad, rivalTeam, s))
-          .then(result => { setSimResult(result); setScreen('result') })
+
+        callSimEngine(home.squad, canonicalRival, s, home.strategy, home.formation)
+          .catch(() => simulateMatch(home.squad, canonicalRival, s))
+          .then(result => {
+            if (role === 'away') {
+              // Away player flips perspective: their squad becomes home, opponent becomes rival
+              const flipped: MatchResult = {
+                myGoals:      result.rivalGoals,
+                rivalGoals:   result.myGoals,
+                myOverall:    result.rivalOverall,
+                rivalOverall: result.myOverall,
+                events: flipEvents(result.events),
+              }
+              setMySquad(away.squad)
+              setMyFormation(away.formation)
+              setStrategy(away.strategy)
+              setRival({ name: 'Rival', players: home.squad, formation: home.formation })
+              setSimResult(flipped)
+            } else {
+              setMySquad(home.squad)
+              setMyFormation(home.formation)
+              setStrategy(home.strategy)
+              setRival(canonicalRival)
+              setSimResult(result)
+            }
+            setScreen('result')
+          })
       }
+      else if (msg.type === 'second_half_go') {
+        const { homeStrategy, awayStrategy } = msg as { type: string; homeStrategy: string; awayStrategy: string }
+        const role = roleRef.current
+        const data = halftimeDataRef.current
+        if (!data) return
+        const canonicalRival: RivalTeam = { name: 'Rival', players: awaySquadRef.current, formation: homeFormationRef.current }
+        callSimEngineSecondHalf(
+          homeSquadRef.current, canonicalRival, seedRef.current,
+          homeStrategy, data.scoreHome, data.scoreAway,
+          data.bookedHome, data.bookedAway,
+          homeFormationRef.current, awayStrategy,
+        ).then(events => {
+          const finalEvents = role === 'away' ? flipEvents(events) : events
+          halftimeResolveRef.current?.(finalEvents)
+        }).catch(() => halftimeRejectRef.current?.())
+      }
+
       else if (msg.type === 'opponent_left') {
         setError('El rival se desconectó de la sala')
         setScreen('lobby')
@@ -136,6 +210,26 @@ export default function Multiplayer({ onBack }: Props) {
   }
 
   const cfg = STRATEGIES[strategy]
+
+  function handleHalftimeConfirm(
+    chosenStrategy: GameStrategy,
+    htScore: { home: number; away: number },
+    bookedHome: string[],
+    bookedAway: string[],
+  ): Promise<MatchEvent[]> {
+    const role = roleRef.current
+    // Convert from my perspective (home=me) to canonical (home=creator)
+    halftimeDataRef.current = role === 'home'
+      ? { scoreHome: htScore.home, scoreAway: htScore.away, bookedHome, bookedAway }
+      : { scoreHome: htScore.away, scoreAway: htScore.home, bookedHome: bookedAway, bookedAway: bookedHome }
+
+    wsRef.current?.send(JSON.stringify({ type: 'halftime_strategy', strategy: chosenStrategy }))
+
+    return new Promise((resolve, reject) => {
+      halftimeResolveRef.current = resolve
+      halftimeRejectRef.current = reject
+    })
+  }
 
   // ── Draft ──────────────────────────────────────────────────────────────────
   if (screen === 'drafting') {
@@ -205,6 +299,7 @@ export default function Multiplayer({ onBack }: Props) {
         initialStrategy={strategy}
         formation={myFormation}
         remainingAttempts={0}
+        onHalftimeConfirm={handleHalftimeConfirm}
         onBack={() => { wsRef.current?.close(); onBack() }}
         onReplay={() => {
           wsRef.current?.close()
