@@ -6,7 +6,7 @@ import Adventure from './pages/Adventure'
 import Multiplayer from './pages/Multiplayer'
 import PenaltyShootout from './pages/PenaltyShootout'
 import { StrategyPicker } from './pages/Adventure'
-import { simulateMatch, callSimEngine } from './lib/simulation'
+import { simulateMatch, callSimEngine, warmUpEngine } from './lib/simulation'
 import { getDailyChallenge, getAdventureRivals, teamDisplayName } from './lib/players'
 import { getRemainingAttempts, consumeAttempt, resetAttempts } from './lib/attempts'
 import { STRATEGIES } from './lib/adventure'
@@ -37,6 +37,7 @@ export default function App() {
     if (selectedMode === 'multiplayer') {
       setScreen('multiplayer')
     } else {
+      warmUpEngine()
       setScreen('draft')
     }
   }
