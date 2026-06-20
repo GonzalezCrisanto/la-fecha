@@ -75,14 +75,16 @@ export default function Home({ onPlay, simAttempts, adventureAttempts, onResetAt
         >
           ⚡ Simulación
         </button>
-        <button
-          onClick={() => onPlay('adventure')}
-          disabled={adventureAttempts === 0}
-          className="w-full font-bold py-4 rounded-xl text-body-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{ background: '#75ff9e', color: '#003918' }}
-        >
-          🎮 Aventura
-        </button>
+        {import.meta.env.VITE_ENABLE_ADVENTURE === 'true' && (
+          <button
+            onClick={() => onPlay('adventure')}
+            disabled={adventureAttempts === 0}
+            className="w-full font-bold py-4 rounded-xl text-body-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ background: '#75ff9e', color: '#003918' }}
+          >
+            🎮 Aventura
+          </button>
+        )}
         <button
           onClick={() => onPlay('multiplayer')}
           className="w-full font-bold py-4 rounded-xl text-body-lg transition-all"
