@@ -26,6 +26,7 @@ export default function Multiplayer({ onBack }: Props) {
   const [roomCode, setRoomCode] = useState('')
   const [joinInput, setJoinInput] = useState('')
   const [error, setError] = useState('')
+  const [connecting, setConnecting] = useState(false)
   const [strategy, setStrategy] = useState<GameStrategy>('balanced')
   const [simResult, setSimResult] = useState<MatchResult | null>(null)
   const [rival, setRival] = useState<RivalTeam | null>(null)
@@ -171,6 +172,7 @@ export default function Multiplayer({ onBack }: Props) {
       }
       else if (msg.type === 'error') {
         setError(msg.message ?? 'Error desconocido')
+        setConnecting(false)
       }
     }
 
@@ -180,14 +182,18 @@ export default function Multiplayer({ onBack }: Props) {
   }
 
   function handleCreate() {
+    if (connecting) return
     setError('')
+    setConnecting(true)
     openWs(ws => ws.send(JSON.stringify({ type: 'create' })))
   }
 
   function handleJoin() {
+    if (connecting) return
     const code = joinInput.trim().toUpperCase()
     if (code.length < 4) { setError('El código debe tener 4 caracteres'); return }
     setError('')
+    setConnecting(true)
     openWs(ws => ws.send(JSON.stringify({ type: 'join', code })))
   }
 
@@ -345,10 +351,11 @@ export default function Multiplayer({ onBack }: Props) {
             <div className="w-full max-w-sm flex flex-col gap-3">
               <button
                 onClick={handleCreate}
-                className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
+                disabled={connecting}
+                className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{ background: '#75ff9e', color: '#003918' }}
               >
-                Crear sala
+                {connecting ? 'Conectando...' : 'Crear sala'}
               </button>
 
               <div className="flex flex-col gap-2">
@@ -366,11 +373,11 @@ export default function Multiplayer({ onBack }: Props) {
                 />
                 <button
                   onClick={handleJoin}
-                  disabled={joinInput.trim().length < 4}
+                  disabled={joinInput.trim().length < 4 || connecting}
                   className="w-full font-bold py-4 rounded-xl text-body-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{ background: '#1d2025', border: '1px solid #75ff9e', color: '#75ff9e' }}
                 >
-                  Unirse a sala
+                  {connecting ? 'Conectando...' : 'Unirse a sala'}
                 </button>
               </div>
             </div>
