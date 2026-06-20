@@ -202,6 +202,54 @@ TEMPLATES = {
         "45 minutos jugados y el marcador parcial dice {home_team} {sh} – {sa} {away_team}.",
     ],
 
+    "own_goal": [
+        "¡Gol en contra de {player} ({team}) a los {min}'! La pelota entró en su propio arco. "
+        "{home_team} {sh} – {sa} {away_team}.",
+        "Tragedia para {team} a los {min}': {player} la mandó adentro sin querer. "
+        "{home_team} {sh} – {sa} {away_team}.",
+        "¡Autogol de {player} ({team}) a los {min}'! Nadie lo podía creer en el estadio. "
+        "{home_team} {sh} – {sa} {away_team}.",
+        "Error fatal de {player} ({team}) a los {min}'. La pelota tomó un desvío y entró. "
+        "{home_team} {sh} – {sa} {away_team}.",
+        "{min}' — Gol en contra de {player} ({team}). Intento de despejar y terminó adentro. "
+        "{home_team} {sh} – {sa} {away_team}.",
+    ],
+
+    "corner": [
+        "Córner para {team}. {player} va a ejecutar desde la bandera.",
+        "{team} gana un córner a los {min}'. {player} se acerca al banderín.",
+        "Córner a los {min}' para {team}. {player} coloca la pelota en el arco.",
+        "Tiro de esquina para {team} a los {min}'. {player} buscará a los suyos en el área.",
+        "Córner a favor de {team}. {player} ejecuta desde el sector derecho.",
+        "{min}' — Córner. {team} genera otro balón parado peligroso. Lo ejecuta {player}.",
+    ],
+
+    "offside": [
+        "¡Offside! El asistente levanta el banderín y frena el ataque de {team}.",
+        "{player} ({team}) queda en posición adelantada a los {min}'. El árbitro cobra el fuera de juego.",
+        "La jugada prometedora de {team} se corta por offside de {player}.",
+        "{min}' — {player} ({team}) habilitado… no, el asistente marca offside.",
+        "Posición adelantada de {player} ({team}) a los {min}'. El VAR no tuvo que intervenir.",
+        "Fuera de juego de {player} ({team}) a los {min}'. Lo encontró el asistente.",
+    ],
+
+    "var_gol": [
+        "El VAR entra en escena para revisar el gol. Tras unos minutos de análisis… "
+        "¡El gol es válido! Sigue el marcador.",
+        "Revisión del VAR. El árbitro consulta el monitor… la imagen es clara: gol válido.",
+        "VAR — Posible offside en la jugada del gol. El sistema lo confirma: sin infracción. ¡Gol!",
+        "El VAR revisó una posible mano. La decisión: todo en regla. El gol se mantiene.",
+        "Dos minutos de espera y el árbitro da el visto bueno. El gol queda en pie.",
+    ],
+
+    "var_tarjeta": [
+        "El VAR revisó la acción que derivó en la tarjeta. Decisión confirmada.",
+        "Intervención del VAR. El árbitro fue al monitor y mantuvo su decisión original.",
+        "VAR — Revisión de la infracción. La tarjeta se mantiene sin cambios.",
+        "El VAR analizó la jugada y el árbitro de campo no rectificó su decisión.",
+        "Minutos de revisión y el árbitro ratificó lo que ya había sancionado en campo.",
+    ],
+
     "pitazo_final": [
         "¡Pitazo final! El árbitro da por concluido el encuentro. "
         "Resultado definitivo: {home_team} {sh} – {sa} {away_team}.",
@@ -225,8 +273,13 @@ TYPE_TAG = {
     "gol":            "  GOL    ",
     "amarilla":       " AMARILLA",
     "roja":           "  ROJA   ",
+    "doble_amarilla": "DBL AMR  ",
+    "gol_en_contra":  "GOL(C)   ",
     "atajada":        " ATAJADA ",
     "ocasion_errada": "OCASION  ",
+    "corner":         " CORNER  ",
+    "offside":        "OFFSIDE  ",
+    "var":            "  VAR    ",
     "entretiempo":    "DESCANSO ",
     "pitazo_final":   "  FINAL  ",
     "figura":         "  FIGURA ",
@@ -294,6 +347,38 @@ def synthesize_extra_events(rep_match, rng, start_minute=1, end_minute=90):
                 "minute": free_minute(lo=15, hi=85),
             })
 
+    # Córners (3-6 por equipo, ejecutados por mediocampistas o delanteros)
+    for side in ("home", "away"):
+        executors = [p for p in rep_match[side]
+                     if p["position"] in ("MED", "DEL") and p.get("name")]
+        if not executors:
+            continue
+        n_corners = rng.randint(1, 3)
+        for _ in range(n_corners):
+            events.append({
+                "side":   side,
+                "type":   "corner",
+                "player": rng.choice(executors)["name"],
+                "minute": free_minute(),
+            })
+
+    # Offsides (1-3 por equipo, solo delanteros)
+    for side in ("home", "away"):
+        forwards = [p for p in rep_match[side]
+                    if p["position"] == "DEL" and p.get("name")]
+        if not forwards:
+            forwards = [p for p in rep_match[side]
+                        if p["position"] == "MED" and p.get("name")]
+        n_offsides = rng.randint(1, 3)
+        for _ in range(n_offsides):
+            if forwards:
+                events.append({
+                    "side":   side,
+                    "type":   "offside",
+                    "player": rng.choice(forwards)["name"],
+                    "minute": free_minute(),
+                })
+
     return events
 
 
@@ -339,6 +424,8 @@ def build_summary(rep_match, score_home, score_away, home_team, away_team):
         for p in stats:
             if p["goals"] > 0:
                 parts.append(f"{p['name'] or p['position']} ({p['goals']})")
+            if p.get("own_goals", 0) > 0:
+                parts.append(f"{p['name'] or p['position']} (GEC)")
         return ", ".join(parts) if parts else "—"
 
     def fmt_cards(stats, team, color):
@@ -435,7 +522,6 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
             half_inserted = True
 
         if ev_type == "goal":
-            # Actualizar marcador ANTES de narrar (para mostrar el marcador correcto)
             if side == "home":
                 sh += 1
             else:
@@ -457,6 +543,26 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
 
             narration.append({"minuto": minute, "tipo": "gol", "texto": texto, "side": side, "player": scorer})
 
+            # VAR review post-gol (20% de probabilidad)
+            if rng.random() < 0.20:
+                narration.append({
+                    "minuto": minute + 1, "tipo": "var", "side": side,
+                    "texto":  pick("var_gol"),
+                })
+
+        elif ev_type == "own_goal":
+            # Gol en contra: el beneficiado es el equipo contrario
+            if side == "home":
+                sa += 1
+            else:
+                sh += 1
+            player = ev.get("player", "")
+            narration.append({
+                "minuto": minute, "tipo": "gol_en_contra", "side": side, "player": player,
+                "texto":  pick("own_goal", player=player, team=team, min=minute,
+                               home_team=home_team, away_team=away_team, sh=sh, sa=sa),
+            })
+
         elif ev_type == "yellow_card":
             player = ev.get("player", "")
             narration.append({
@@ -471,6 +577,11 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
                 "minuto": minute, "tipo": "doble_amarilla", "side": side, "player": player,
                 "texto":  pick("doble_amarilla", player=player, team=team, min=minute),
             })
+            if rng.random() < 0.15:
+                narration.append({
+                    "minuto": minute + 1, "tipo": "var", "side": side,
+                    "texto":  pick("var_tarjeta"),
+                })
 
         elif ev_type == "red_card":
             player = ev.get("player", "")
@@ -479,6 +590,11 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
                 "minuto": minute, "tipo": "roja", "side": side, "player": player,
                 "texto":  pick("roja", player=player, team=team, min=minute),
             })
+            if rng.random() < 0.15:
+                narration.append({
+                    "minuto": minute + 1, "tipo": "var", "side": side,
+                    "texto":  pick("var_tarjeta"),
+                })
 
         elif ev_type == "save":
             player = ev.get("player", "")
@@ -492,6 +608,20 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
             narration.append({
                 "minuto": minute, "tipo": "ocasion_errada", "side": side, "player": player,
                 "texto":  pick("bigChanceMissed", player=player, min=minute),
+            })
+
+        elif ev_type == "corner":
+            player = ev.get("player", "")
+            narration.append({
+                "minuto": minute, "tipo": "corner", "side": side, "player": player,
+                "texto":  pick("corner", player=player, team=team, min=minute),
+            })
+
+        elif ev_type == "offside":
+            player = ev.get("player", "")
+            narration.append({
+                "minuto": minute, "tipo": "offside", "side": side, "player": player,
+                "texto":  pick("offside", player=player, team=team, min=minute),
             })
 
     # Entretiempo si todos los eventos fueron ≤45'

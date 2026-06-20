@@ -544,6 +544,31 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
     # dentro del loop de stats de arriba; no hace falta agregar eventos genéricos.
 
     result["events"].sort(key=lambda e: e["minute"])
+
+    # ── Gol en contra (probabilidad baja por partido) ─────────────────────────
+    OWN_GOAL_PROB = 0.04
+    if random.random() < OWN_GOAL_PROB:
+        og_team = random.choice(["home", "away"])
+        og_opp  = "away" if og_team == "home" else "home"
+        candidates = [p for p in result[og_team] if p["position"] in ("DEF", "MED")]
+        if not candidates:
+            candidates = result[og_team]
+        if candidates:
+            og_stat = random.choice(candidates)
+            og_stat["own_goals"] = 1
+            og_minute = random.randint(start_minute, end_minute)
+            if og_opp == "home":
+                result["score_home"] += 1
+            else:
+                result["score_away"] += 1
+            result["events"].append({
+                "side":   og_team,
+                "type":   "own_goal",
+                "player": og_stat["name"] or og_stat["position"],
+                "minute": og_minute,
+            })
+            result["events"].sort(key=lambda e: e["minute"])
+
     return result
 
 

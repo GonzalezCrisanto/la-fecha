@@ -1,7 +1,8 @@
 import type { Player, RivalTeam } from '../types'
 
 export type EventType =
-  | 'goal' | 'save' | 'shot_off' | 'corner' | 'offside' | 'foul' | 'yellow' | 'red' | 'double_yellow'
+  | 'goal' | 'own_goal' | 'save' | 'shot_off' | 'corner' | 'offside' | 'foul'
+  | 'yellow' | 'red' | 'double_yellow' | 'var'
   | 'halftime' | 'fulltime' | 'motm' | 'kickoff' | 'summary'
 
 export interface MatchEvent {
@@ -340,11 +341,15 @@ export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: n
 
   const TIPO_MAP: Record<string, EventType> = {
     gol:            'goal',
+    gol_en_contra:  'own_goal',
     amarilla:       'yellow',
     roja:           'red',
     doble_amarilla: 'double_yellow',
     atajada:        'save',
     ocasion_errada: 'shot_off',
+    corner:         'corner',
+    offside:        'offside',
+    var:            'var',
     entretiempo:    'halftime',
     pitazo_final:   'fulltime',
     figura:         'motm',
@@ -410,8 +415,10 @@ export async function callSimEngineSecondHalf(
   const data = await res.json() as EngineResult
 
   const TIPO_MAP: Record<string, EventType> = {
-    gol: 'goal', amarilla: 'yellow', roja: 'red', doble_amarilla: 'double_yellow',
+    gol: 'goal', gol_en_contra: 'own_goal',
+    amarilla: 'yellow', roja: 'red', doble_amarilla: 'double_yellow',
     atajada: 'save', ocasion_errada: 'shot_off',
+    corner: 'corner', offside: 'offside', var: 'var',
     entretiempo: 'halftime', pitazo_final: 'fulltime', figura: 'motm',
     arranque: 'kickoff', resumen: 'summary',
   }

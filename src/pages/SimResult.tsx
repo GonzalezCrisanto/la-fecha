@@ -33,8 +33,12 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
   const isLive = phase !== 'second' || visibleCount < allEvents.length
   const isDone = phase === 'second' && visibleCount >= allEvents.length
 
-  const liveMyGoals = visibleEvents.filter(e => e.type === 'goal' && e.side === 'home').length
-  const liveRivalGoals = visibleEvents.filter(e => e.type === 'goal' && e.side === 'away').length
+  const liveMyGoals = visibleEvents.filter(e =>
+    (e.type === 'goal' && e.side === 'home') || (e.type === 'own_goal' && e.side === 'away')
+  ).length
+  const liveRivalGoals = visibleEvents.filter(e =>
+    (e.type === 'goal' && e.side === 'away') || (e.type === 'own_goal' && e.side === 'home')
+  ).length
 
   useEffect(() => {
     if (phase !== 'first' && phase !== 'second') return
@@ -43,8 +47,12 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
     if (next?.type === 'halftime' && phase === 'first') {
       const id = setTimeout(() => {
         const eventsWithHT = allEvents.slice(0, visibleCount + 1)
-        const hs = eventsWithHT.filter(e => e.type === 'goal' && e.side === 'home').length
-        const as_ = eventsWithHT.filter(e => e.type === 'goal' && e.side === 'away').length
+        const hs = eventsWithHT.filter(e =>
+          (e.type === 'goal' && e.side === 'home') || (e.type === 'own_goal' && e.side === 'away')
+        ).length
+        const as_ = eventsWithHT.filter(e =>
+          (e.type === 'goal' && e.side === 'away') || (e.type === 'own_goal' && e.side === 'home')
+        ).length
         setHtScore({ home: hs, away: as_ })
         setVisibleCount(c => c + 1)
         setPhase('halftime-break')
@@ -333,32 +341,39 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
 }
 
 const EVENT_META: Record<EventType, { icon: string; label: (player: string, isHome: boolean) => string; highlight: string }> = {
-  goal:     { icon: '⚽', label: (p)  => `¡GOL de ${p}!`,          highlight: '#75ff9e44' },
-  save:     { icon: '🧤', label: (p)  => `Atajada de ${p}`,         highlight: '#1a2a3a'   },
-  shot_off: { icon: '💨', label: (p)  => `${p} tira afuera`,        highlight: '#272a30'   },
-  corner:   { icon: '🚩', label: (p)  => `Córner — ataque de ${p}`, highlight: '#272a30'   },
-  offside:  { icon: '🏃', label: (p)  => `${p} en offside`,         highlight: '#272a30'   },
-  foul:     { icon: '⚠️', label: (p)  => `Falta de ${p}`,          highlight: '#272a30'   },
-  yellow:        { icon: '🟨',    label: (p) => `Amarilla para ${p}`,       highlight: '#2a2500' },
-  double_yellow: { icon: '🟨🟥', label: (p) => `¡Doble amarilla! ${p}`,    highlight: '#3a0a0a' },
-  red:           { icon: '🟥',    label: (p) => `¡Expulsado! ${p}`,        highlight: '#3a0a0a' },
-  halftime: { icon: '⏸',  label: ()   => 'Fin del primer tiempo',   highlight: '#1d2025'   },
-  fulltime: { icon: '🏁', label: ()   => 'Pitazo final',            highlight: '#1d2025'   },
-  motm:     { icon: '⭐', label: (p)  => `Figura: ${p}`,            highlight: '#2a2500'   },
-  kickoff:  { icon: '🔔', label: ()   => '¡Comenzó el partido!',    highlight: '#1d2025'   },
-  summary:  { icon: '📋', label: ()   => 'Resumen del partido',      highlight: '#151a1e'   },
+  goal:         { icon: '⚽',   label: (p) => `¡GOL de ${p}!`,             highlight: '#75ff9e44' },
+  own_goal:     { icon: '⚽',   label: (p) => `Gol en contra de ${p}`,     highlight: '#ff6b3344' },
+  save:         { icon: '🧤',   label: (p) => `Atajada de ${p}`,           highlight: '#1a2a3a'   },
+  shot_off:     { icon: '💨',   label: (p) => `${p} tira afuera`,          highlight: '#272a30'   },
+  corner:       { icon: '🚩',   label: (p) => `Córner — ${p}`,            highlight: '#272a30'   },
+  offside:      { icon: '🏃',   label: (p) => `${p} en offside`,           highlight: '#272a30'   },
+  foul:         { icon: '⚠️',  label: (p) => `Falta de ${p}`,            highlight: '#272a30'   },
+  var:          { icon: '📺',   label: ()  => 'Revisión VAR',              highlight: '#1a1a2e'   },
+  yellow:        { icon: '🟨',    label: (p) => `Amarilla para ${p}`,      highlight: '#2a2500' },
+  double_yellow: { icon: '🟨🟥', label: (p) => `¡Doble amarilla! ${p}`,   highlight: '#3a0a0a' },
+  red:           { icon: '🟥',    label: (p) => `¡Expulsado! ${p}`,       highlight: '#3a0a0a' },
+  halftime: { icon: '⏸',  label: ()  => 'Fin del primer tiempo',          highlight: '#1d2025'   },
+  fulltime: { icon: '🏁', label: ()  => 'Pitazo final',                   highlight: '#1d2025'   },
+  motm:     { icon: '⭐', label: (p) => `Figura: ${p}`,                   highlight: '#2a2500'   },
+  kickoff:  { icon: '🔔', label: ()  => '¡Comenzó el partido!',           highlight: '#1d2025'   },
+  summary:  { icon: '📋', label: ()  => 'Resumen del partido',             highlight: '#151a1e'   },
 }
 
 function EventRow({ event, isNew }: { event: MatchEvent; isNew: boolean }) {
   const isHome   = event.side === 'home'
   const meta     = EVENT_META[event.type]
-  const isGoal   = event.type === 'goal'
-  const isGlobal = event.type === 'halftime' || event.type === 'fulltime' || event.type === 'motm' || event.type === 'kickoff' || event.type === 'summary'
+  const isGoalEvent = event.type === 'goal' || event.type === 'own_goal'
+  // Own goals benefit the opposing team, so flip the "benefits home" logic
+  const benefitsHome = (event.type === 'goal' && event.side === 'home')
+    || (event.type === 'own_goal' && event.side === 'away')
+  const isGlobal = event.type === 'halftime' || event.type === 'fulltime' || event.type === 'motm'
+    || event.type === 'kickoff' || event.type === 'summary' || event.type === 'var'
 
   const minuteLabel = event.type === 'halftime' ? "45'"
     : event.type === 'fulltime' ? "90'+2"
     : event.type === 'kickoff' ? (event.minute === 0 ? "1'" : `${event.minute}'`)
     : event.type === 'motm' || event.type === 'summary' ? '—'
+    : event.type === 'var' ? 'VAR'
     : `${event.minute}'`
 
   return (
@@ -377,8 +392,8 @@ function EventRow({ event, isNew }: { event: MatchEvent; isNew: boolean }) {
       <div className="flex-1 min-w-0">
         {event.text ? (
           <p className={`text-body-sm leading-snug ${
-            isGoal
-              ? isHome ? 'text-[#75ff9e] font-semibold' : 'text-[#ffb4ab] font-semibold'
+            isGoalEvent
+              ? benefitsHome ? 'text-[#75ff9e] font-semibold' : 'text-[#ffb4ab] font-semibold'
               : isGlobal ? 'text-[#859585] italic'
               : 'text-[#e1e2ea]'
           }`}>
@@ -387,8 +402,8 @@ function EventRow({ event, isNew }: { event: MatchEvent; isNew: boolean }) {
         ) : (
           <>
             <p className={`text-body-sm font-semibold truncate ${
-              isGoal
-                ? isHome ? 'text-[#75ff9e]' : 'text-[#ffb4ab]'
+              isGoalEvent
+                ? benefitsHome ? 'text-[#75ff9e]' : 'text-[#ffb4ab]'
                 : isHome ? 'text-[#e1e2ea]' : 'text-[#bacbb9]'
             }`}>
               {meta.label(event.playerName, isHome)}
