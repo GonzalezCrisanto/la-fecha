@@ -5,11 +5,13 @@
  * Position mapping: GK→ARQ, DF→DEF, MF→MED, FW→DEL (multi-pos: take first)
  *
  * overall: percentile rank within position group of a composite score:
- *   Outfield — market_value 40% + goals/90 25% + assists/90 20% + minutes_pct 15%
- *   ARQ      — market_value 40% + clean_sheet_pct 40% + minutes_pct 20%
+ *   Outfield — goals/90 45% + assists/90 30% + minutes_pct 25%
+ *   ARQ      — clean_sheet_pct 65% + minutes_pct 35%
+ *   (market value intentionally excluded so overall = in-season performance)
  *
- * value (price): min-max of market_value_eur → 1–100
- *   No market data → mapped from composite score → 1–50 (unknown players are cheaper)
+ * value (price): 65% performance (overall) + 35% market reputation (log EUR value)
+ *   Scaled to [5, 50]. No market data → 0% market component.
+ *   Budget is 400, so 11 quality players (~overall 70) cost ~370–380.
  */
 
 import fs from "fs";
@@ -17,7 +19,7 @@ import path from "path";
 
 const CSV_PATH = path.join(process.cwd(), "THEDATA", "players_argentina_2026.csv");
 const OUT_PATH = path.join(process.cwd(), "public", "data", "players.json");
-const MIN_MINUTES = 90;
+const MIN_MINUTES = 360;
 
 type GamePosition = "ARQ" | "DEF" | "MED" | "DEL";
 
@@ -177,18 +179,19 @@ function posMax(pos: GamePosition, fn: (p: (typeof players)[0]) => number): numb
 }
 
 // ── Composite score (0–1) ──────────────────────────────────────────────────
+// Market value deliberately excluded: overall must reflect in-season performance,
+// not transfer reputation. This decouples price from quality, enabling bargain picks.
 
 function compositeScore(p: (typeof players)[0]): number {
-  const mvNorm = p.marketValue > 0 ? minMax(p.marketValue, mvMin, mvMax) : 0;
   const minPct = p.minutes / posMax(p.pos, (x) => x.minutes);
 
   if (p.pos === "ARQ") {
-    return mvNorm * 0.4 + p.cleanSheetPct * 0.4 + minPct * 0.2;
+    return p.cleanSheetPct * 0.65 + minPct * 0.35;
   }
 
   const gNorm = p.goalsP90 / posMax(p.pos, (x) => x.goalsP90);
   const aNorm = p.assistsP90 / posMax(p.pos, (x) => x.assistsP90);
-  return mvNorm * 0.4 + gNorm * 0.25 + aNorm * 0.2 + minPct * 0.15;
+  return gNorm * 0.45 + aNorm * 0.30 + minPct * 0.25;
 }
 
 // ── Overall: percentile within position ───────────────────────────────────
@@ -206,20 +209,23 @@ for (const [, group] of byPos) {
 }
 
 // ── Value (price) ──────────────────────────────────────────────────────────
-
-// Composite score range for players WITHOUT market value (for fallback scaling)
-const noMvScores = players.filter((p) => p.marketValue === 0).map((p) => scoreMap.get(slug(p.name, p.team))!);
-const noMvMin = Math.min(...noMvScores, 0);
-const noMvMax = Math.max(...noMvScores, 0.001);
+// 65% in-season performance (overall percentile) + 35% market reputation (log EUR).
+// Players without market data get 0% market component — pure performance price.
+// Output range [5, 50]; budget 400 → 11 quality (~overall 70) players cost ~370–380.
 
 function playerValue(p: (typeof players)[0]): number {
-  if (p.marketValue > 0) {
-    // Log scale: market values follow a power law, log gives fair spread
-    return Math.max(1, Math.min(100, logMinMax(p.marketValue, mvMin, mvMax)));
-  }
-  // No market data: scale composite within 1–40 (unknown = cheaper)
-  const score = scoreMap.get(slug(p.name, p.team))!;
-  return Math.max(1, Math.round(minMax(score, noMvMin, noMvMax, 1, 40)));
+  const id = slug(p.name, p.team);
+  const overall = overallMap.get(id) ?? 1;
+  const perfScore = overall / 99; // 0–1
+
+  const mvPremium =
+    p.marketValue > 0 && mvMax > mvMin
+      ? (Math.log10(p.marketValue) - Math.log10(mvMin)) /
+        (Math.log10(mvMax) - Math.log10(mvMin))
+      : 0;
+
+  const mixed = 0.65 * perfScore + 0.35 * mvPremium;
+  return Math.max(5, Math.min(50, Math.round(5 + mixed * 45)));
 }
 
 // ── Build output ───────────────────────────────────────────────────────────
@@ -258,13 +264,14 @@ const byPosCount = output.reduce<Record<string, number>>((acc, p) => {
   return acc;
 }, {});
 
-const noMarket = output.filter((p) => p.value <= 50 && p.overall < 60).length;
+const noMarket = output.filter((p) => p.value <= 20).length;
 
 console.log(`✓ Generated ${output.length} players → ${OUT_PATH}`);
+console.log(`  Min minutes filter: ${MIN_MINUTES}`);
 console.log(`  Distribution:  ${JSON.stringify(byPosCount)}`);
 console.log(`  Overall range: ${Math.min(...output.map((p) => p.overall))}–${Math.max(...output.map((p) => p.overall))}`);
 console.log(`  Value range:   ${Math.min(...output.map((p) => p.value))}–${Math.max(...output.map((p) => p.value))}`);
-console.log(`  No market data (value ≤50): ${output.filter((p) => p.value <= 50).length} players`);
+console.log(`  Budget players (value ≤20): ${noMarket} players`);
 console.log(`\n  Top 5 per position:`);
 
 for (const pos of ["ARQ", "DEF", "MED", "DEL"] as GamePosition[]) {
