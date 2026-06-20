@@ -168,8 +168,8 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
           <div className="text-center">
             <p className="text-label-caps text-[#859585] mb-1">VOS</p>
             <p
-              className="text-[72px] font-black leading-none transition-all"
-              style={{ color: isDone ? outcomeColor : '#e1e2ea' }}
+              className="font-black leading-none transition-all"
+              style={{ color: isDone ? outcomeColor : '#e1e2ea', fontSize: 'clamp(2.5rem,12vw,4.5rem)' }}
             >
               {finalMyGoals}
             </p>
@@ -180,8 +180,8 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
               {teamDisplayName(rival.name).toUpperCase()}
             </p>
             <p
-              className="text-[72px] font-black leading-none transition-all"
-              style={{ color: isDone && !won && !drew ? '#75ff9e' : '#e1e2ea' }}
+              className="font-black leading-none transition-all"
+              style={{ color: isDone && !won && !drew ? '#75ff9e' : '#e1e2ea', fontSize: 'clamp(2.5rem,12vw,4.5rem)' }}
             >
               {finalRivalGoals}
             </p>
@@ -247,8 +247,8 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
               style={{ background: '#101319', border: '1px solid #3b4a3d' }}
             >
               <p className="text-body-sm font-bold text-[#e1e2ea] mb-1">{cfg.label}</p>
-              {cfg.pros.map(p => <p key={p} className="text-label-caps" style={{ color: '#75ff9e', fontSize: '11px' }}>{p}</p>)}
-              {cfg.cons.map(c => <p key={c} className="text-label-caps" style={{ color: '#ffb4ab', fontSize: '11px' }}>{c}</p>)}
+              {cfg.pros.map(p => <p key={p} className="text-label-caps" style={{ color: '#75ff9e', fontSize: '12px' }}>{p}</p>)}
+              {cfg.cons.map(c => <p key={c} className="text-label-caps" style={{ color: '#ffb4ab', fontSize: '12px' }}>{c}</p>)}
             </div>
           )}
           <button
@@ -291,7 +291,7 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
       {isDone && (
         <div
           className="shrink-0 px-4 py-4 border-t flex flex-col gap-2"
-          style={{ background: '#1d2025', borderColor: '#3b4a3d' }}
+          style={{ background: '#1d2025', borderColor: '#3b4a3d', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
         >
           {drew && onPenalties && (
             <button

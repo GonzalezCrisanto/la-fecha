@@ -468,12 +468,12 @@ export default function Adventure({ squad, rivals, remainingAttempts, onBack, on
         <div className="flex items-center justify-center gap-8">
           <div className="text-center">
             <p className="text-label-caps text-[#859585] mb-1">VOS</p>
-            <p className="text-[52px] font-black leading-none text-[#e1e2ea]">{matchState.scoreHome}</p>
+            <p className="font-black leading-none text-[#e1e2ea]" style={{ fontSize: 'clamp(2rem,10vw,3.25rem)' }}>{matchState.scoreHome}</p>
           </div>
           <p className="text-headline-lg text-[#3b4a3d] font-bold mt-3">—</p>
           <div className="text-center">
-            <p className="text-label-caps text-[#859585] mb-1 truncate max-w-[90px]">{rivalName.toUpperCase()}</p>
-            <p className="text-[52px] font-black leading-none text-[#e1e2ea]">{matchState.scoreAway}</p>
+            <p className="text-label-caps text-[#859585] mb-1 truncate max-w-[120px]">{rivalName.toUpperCase()}</p>
+            <p className="font-black leading-none text-[#e1e2ea]" style={{ fontSize: 'clamp(2rem,10vw,3.25rem)' }}>{matchState.scoreAway}</p>
           </div>
         </div>
         <p className="text-label-caps text-[#859585] mt-2">
@@ -649,10 +649,10 @@ export function StrategyPicker({ current, onSelect, compact = false }: { current
           >
             <p className="text-body-sm font-bold text-[#e1e2ea] mb-1">{cfg.label}</p>
             {cfg.pros.map(p => (
-              <p key={p} className="text-label-caps" style={{ color: '#75ff9e', fontSize: '10px' }}>{p}</p>
+              <p key={p} className="text-label-caps" style={{ color: '#75ff9e', fontSize: '12px' }}>{p}</p>
             ))}
             {cfg.cons.map(c => (
-              <p key={c} className="text-label-caps" style={{ color: '#ffb4ab', fontSize: '10px' }}>{c}</p>
+              <p key={c} className="text-label-caps" style={{ color: '#ffb4ab', fontSize: '12px' }}>{c}</p>
             ))}
           </button>
         )
@@ -685,7 +685,7 @@ function BottomArea({ bottom, remainingAttempts, onDecide, onContinue, onHalftim
     const accentBg    = isAttack ? '#75ff9e11' : '#ffb4ab11'
     const accentBorder= isAttack ? '#75ff9e33' : '#ffb4ab33'
     return (
-      <div className="shrink-0 px-4 py-3 border-t flex flex-col gap-2" style={{ background: '#1d2025', borderColor: '#3b4a3d' }}>
+      <div className="shrink-0 px-4 py-3 border-t flex flex-col gap-2" style={{ background: '#1d2025', borderColor: '#3b4a3d', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
         <p className="text-label-caps px-1" style={{ color: accentColor }}>
           {isAttack ? '⚔️ ¿QUÉ HACÉS?' : '🛡️ ¿CÓMO DEFENDÉS?'}
         </p>
@@ -710,7 +710,7 @@ function BottomArea({ bottom, remainingAttempts, onDecide, onContinue, onHalftim
   if (bottom.kind === 'halftime') {
     const [selected, setSelected] = useState<GameStrategy>(bottom.currentStrategy)
     return (
-      <div className="shrink-0 px-4 py-4 border-t flex flex-col gap-3" style={{ background: '#1d2025', borderColor: '#3b4a3d' }}>
+      <div className="shrink-0 px-4 py-4 border-t flex flex-col gap-3" style={{ background: '#1d2025', borderColor: '#3b4a3d', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
         <div className="flex items-center justify-between">
           <p className="text-label-caps font-bold text-[#75ff9e]">⏸ DESCANSO · AJUSTE TÁCTICO</p>
           <p className="text-label-caps text-[#859585]">45'</p>
@@ -729,7 +729,7 @@ function BottomArea({ bottom, remainingAttempts, onDecide, onContinue, onHalftim
 
   if (bottom.kind === 'continue') {
     return (
-      <div className="shrink-0 px-4 py-4 border-t" style={{ background: '#1d2025', borderColor: '#3b4a3d' }}>
+      <div className="shrink-0 px-4 py-4 border-t" style={{ background: '#1d2025', borderColor: '#3b4a3d', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
         <button
           onClick={onContinue}
           className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
@@ -743,7 +743,7 @@ function BottomArea({ bottom, remainingAttempts, onDecide, onContinue, onHalftim
 
   if (bottom.kind === 'next-round') {
     return (
-      <div className="shrink-0 px-4 py-4 border-t" style={{ background: '#1d2025', borderColor: '#3b4a3d' }}>
+      <div className="shrink-0 px-4 py-4 border-t" style={{ background: '#1d2025', borderColor: '#3b4a3d', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
         <button
           onClick={onNextRound}
           className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
@@ -757,7 +757,7 @@ function BottomArea({ bottom, remainingAttempts, onDecide, onContinue, onHalftim
 
   if (bottom.kind === 'eliminated') {
     return (
-      <div className="shrink-0 px-4 py-4 border-t flex flex-col gap-2" style={{ background: '#1d2025', borderColor: '#3b4a3d' }}>
+      <div className="shrink-0 px-4 py-4 border-t flex flex-col gap-2" style={{ background: '#1d2025', borderColor: '#3b4a3d', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
         {remainingAttempts > 0 ? (
           <button
             onClick={onReplay}
@@ -790,7 +790,7 @@ function BottomArea({ bottom, remainingAttempts, onDecide, onContinue, onHalftim
 
   if (bottom.kind === 'champion') {
     return (
-      <div className="shrink-0 px-4 py-4 border-t flex flex-col gap-2" style={{ background: '#1d2025', borderColor: '#3b4a3d' }}>
+      <div className="shrink-0 px-4 py-4 border-t flex flex-col gap-2" style={{ background: '#1d2025', borderColor: '#3b4a3d', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
         <div className="text-center py-2">
           <p className="text-[36px]">🏆</p>
           <p className="text-headline-lg font-black text-[#75ff9e]">¡Campeón!</p>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Draft from './Draft'
 import SimResult from './SimResult'
-import { callSimEngine, callSimEngineSecondHalf, simulateMatch } from '../lib/simulation'
+import { callSimEngine, callSimEngineSecondHalf, simulateMatch, warmUpEngine } from '../lib/simulation'
 import { StrategyPicker } from './Adventure'
 import { STRATEGIES } from '../lib/adventure'
 import type { Player, Formation, RivalTeam } from '../types'
@@ -102,6 +102,7 @@ export default function Multiplayer({ onBack }: Props) {
         setScreen('drafting')
       }
       else if (msg.type === 'opponent_joined') {
+        warmUpEngine()
         setScreen('drafting')
       }
       else if (msg.type === 'start') {

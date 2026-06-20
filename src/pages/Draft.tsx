@@ -327,7 +327,7 @@ export default function Draft({ mode, onBack, onConfirm }: Props) {
       </div>
 
       {/* ── CTA / Progreso ── */}
-      <div className="shrink-0 px-4 py-4 border-t" style={{ background: '#1d2025', borderColor: '#3b4a3d' }}>
+      <div className="shrink-0 px-4 py-4 border-t" style={{ background: '#1d2025', borderColor: '#3b4a3d', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
         {isComplete ? (
           <button
             onClick={() => onConfirm(squad, formation)}

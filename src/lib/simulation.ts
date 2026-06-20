@@ -310,6 +310,12 @@ const STRATEGY_MENTALITY: Record<string, string> = {
   counter:   'contraataque',
 }
 
+export function warmUpEngine(): void {
+  const url = (import.meta.env.VITE_SIM_ENGINE_URL as string | undefined)?.replace(/\/$/, '')
+  if (!url) return
+  fetch(`${url}/health`, { method: 'GET' }).catch(() => {})
+}
+
 export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: number, strategy = 'balanced', formation?: string): Promise<MatchResult> {
   const url = (import.meta.env.VITE_SIM_ENGINE_URL as string | undefined)?.replace(/\/$/, '')
   if (!url) throw new Error('VITE_SIM_ENGINE_URL no configurada')
