@@ -1,3 +1,4 @@
+const http = require('http')
 const { WebSocketServer } = require('ws')
 
 const PORT = process.env.PORT || 8080
@@ -18,7 +19,14 @@ function send(ws, payload) {
   if (ws?.readyState === 1) ws.send(JSON.stringify(payload))
 }
 
-const wss = new WebSocketServer({ port: PORT })
+const server = http.createServer((req, res) => {
+  res.writeHead(200)
+  res.end('ok')
+})
+
+const wss = new WebSocketServer({ server })
+
+server.listen(PORT, () => console.log(`WS server running on port ${PORT}`))
 
 const heartbeat = setInterval(() => {
   wss.clients.forEach((ws) => {
@@ -116,5 +124,3 @@ setInterval(() => {
     if (now - room.createdAt > ROOM_TTL_MS) rooms.delete(code)
   }
 }, 10 * 60 * 1000)
-
-console.log(`WS server running on port ${PORT}`)
