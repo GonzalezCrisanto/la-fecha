@@ -235,6 +235,11 @@ export default function Multiplayer({ onBack }: Props) {
     return new Promise((resolve, reject) => {
       halftimeResolveRef.current = resolve
       halftimeRejectRef.current = reject
+      setTimeout(() => {
+        setError('El rival tardó demasiado en elegir estrategia')
+        setScreen('lobby')
+        reject()
+      }, 5 * 60 * 1000)
     })
   }
 

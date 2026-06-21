@@ -20,9 +20,22 @@ function send(ws, payload) {
 
 const wss = new WebSocketServer({ port: PORT })
 
+const heartbeat = setInterval(() => {
+  wss.clients.forEach((ws) => {
+    if (!ws.isAlive) { ws.terminate(); return }
+    ws.isAlive = false
+    ws.ping()
+  })
+}, 30_000)
+
+wss.on('close', () => clearInterval(heartbeat))
+
 wss.on('connection', (ws) => {
+  ws.isAlive = true
   ws.roomCode = null
   ws.role = null
+
+  ws.on('pong', () => { ws.isAlive = true })
 
   ws.on('message', (raw) => {
     let msg
@@ -60,7 +73,7 @@ wss.on('connection', (ws) => {
         const payload = { type: 'start', seed, home: room.homeSquad, away: room.awaySquad }
         send(room.home, payload)
         send(room.away, payload)
-        setTimeout(() => rooms.delete(room.code), 5 * 60 * 1000)
+        setTimeout(() => rooms.delete(room.code), 20 * 60 * 1000)
       }
     }
 
