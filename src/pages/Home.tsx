@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { loadPlayers, getDailyChallenge, teamDisplayName } from '../lib/players'
 import type { DailyChallenge, GameMode } from '../types'
+import { Lightning, GameController, Handshake } from '@phosphor-icons/react'
 
 interface Props {
   onPlay: (mode: GameMode) => void
@@ -53,11 +54,11 @@ export default function Home({ onPlay, simAttempts, adventureAttempts, onResetAt
             style={{ borderTop: '1px solid #3b4a3d' }}
           >
             <span>
-              ⚡ <span className={simAttempts > 0 ? 'text-[#75ff9e]' : 'text-[#ffb4ab]'}>{simAttempts}</span> chances
+              <Lightning weight="bold" size={14} className="inline align-middle" /> <span className={simAttempts > 0 ? 'text-[#75ff9e]' : 'text-[#ffb4ab]'}>{simAttempts}</span> chances
             </span>
             <span className="text-[#3b4a3d]">·</span>
             <span>
-              🎮 <span className={adventureAttempts > 0 ? 'text-[#75ff9e]' : 'text-[#ffb4ab]'}>{adventureAttempts}</span> chances
+              <GameController weight="bold" size={14} className="inline align-middle" /> <span className={adventureAttempts > 0 ? 'text-[#75ff9e]' : 'text-[#ffb4ab]'}>{adventureAttempts}</span> chances
             </span>
           </div>
         </div>
@@ -73,7 +74,7 @@ export default function Home({ onPlay, simAttempts, adventureAttempts, onResetAt
           className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ background: '#75ff9e', color: '#003918' }}
         >
-          ⚡ Simulación
+          <Lightning weight="bold" size={18} className="inline align-middle" /> Simulación
         </button>
         {import.meta.env.VITE_ENABLE_ADVENTURE === 'true' && (
           <button
@@ -82,7 +83,7 @@ export default function Home({ onPlay, simAttempts, adventureAttempts, onResetAt
             className="w-full font-bold py-4 rounded-xl text-body-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ background: '#75ff9e', color: '#003918' }}
           >
-            🎮 Aventura
+            <GameController weight="bold" size={18} className="inline align-middle" /> Aventura
           </button>
         )}
         <button
@@ -90,7 +91,7 @@ export default function Home({ onPlay, simAttempts, adventureAttempts, onResetAt
           className="w-full font-bold py-4 rounded-xl text-body-lg transition-all"
           style={{ background: '#1d2025', border: '1px solid #75ff9e', color: '#75ff9e' }}
         >
-          🤝 Multijugador
+          <Handshake weight="bold" size={18} className="inline align-middle" /> Multijugador
         </button>
       </div>
 

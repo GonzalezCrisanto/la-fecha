@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { ArrowLeft, Trophy, SmileyMeh } from '@phosphor-icons/react'
 import type { Player, RivalTeam } from '../types'
 import { teamDisplayName } from '../lib/players'
 import {
@@ -198,7 +199,7 @@ export default function PenaltyShootout({ squad, rival, seed, onBack }: Props) {
         style={{ background: '#1d2025', borderColor: '#3b4a3d' }}
       >
         <button onClick={onBack} className="text-body-sm text-[#bacbb9] hover:text-[#e1e2ea]">
-          ← Salir
+          <ArrowLeft weight="bold" size={18} className="inline align-middle" /> Salir
         </button>
         <p className="flex-1 text-center text-label-caps font-bold text-[#ffde6e]">
           TANDA DE PENALES
@@ -332,7 +333,7 @@ function CoinTossScreen({
         </button>
       )}
       <button onClick={onBack} className="text-body-sm text-[#859585]">
-        ← Volver
+        <ArrowLeft weight="bold" size={18} className="inline align-middle" /> Volver
       </button>
       <style>{`
         @keyframes coin-flip {
@@ -366,7 +367,7 @@ function OrderSelectionScreen({
         className="shrink-0 flex items-center gap-3 px-4 py-3 border-b"
         style={{ background: '#1d2025', borderColor: '#3b4a3d' }}
       >
-        <button onClick={onBack} className="text-body-sm text-[#bacbb9]">← Volver</button>
+        <button onClick={onBack} className="text-body-sm text-[#bacbb9]"><ArrowLeft weight="bold" size={18} className="inline align-middle" /> Volver</button>
         <p className="flex-1 text-center text-label-caps font-bold text-[#e1e2ea]">
           ELEGÍ TUS PATEADORES
         </p>
@@ -722,7 +723,7 @@ function DoneScreen({
         className="text-label-caps font-bold text-lg tracking-widest"
         style={{ color: won ? '#75ff9e' : '#ffb4ab' }}
       >
-        {won ? '🏆 CLASIFICASTE' : '😔 ELIMINADO'}
+        {won ? <><Trophy weight="fill" size={16} className="inline align-middle" /> CLASIFICASTE</> : <><SmileyMeh weight="fill" size={16} className="inline align-middle" /> ELIMINADO</>}
       </p>
       <div className="flex items-center gap-4 text-center">
         <div>

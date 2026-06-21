@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { ArrowLeft, Handshake, Hourglass } from '@phosphor-icons/react'
 import Draft from './Draft'
 import SimResult from './SimResult'
 import { callSimEngine, callSimEngineSecondHalf, simulateMatch, warmUpEngine } from '../lib/simulation'
@@ -282,7 +283,7 @@ export default function Multiplayer({ onBack }: Props) {
             className="w-full max-w-sm font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
             style={{ background: '#75ff9e', color: '#003918' }}
           >
-            🤝 Enviar equipo
+            <Handshake weight="bold" size={18} className="inline align-middle" /> Enviar equipo
           </button>
         </div>
       </div>
@@ -334,9 +335,9 @@ export default function Multiplayer({ onBack }: Props) {
           onClick={() => { wsRef.current?.close(); onBack() }}
           className="text-body-sm text-[#bacbb9] hover:text-[#e1e2ea] transition-colors"
         >
-          ← Volver
+          <ArrowLeft weight="bold" size={18} className="inline align-middle" /> Volver
         </button>
-        <p className="flex-1 text-center text-body-sm font-semibold text-[#e1e2ea]">🤝 Multijugador</p>
+        <p className="flex-1 text-center text-body-sm font-semibold text-[#e1e2ea]"><Handshake weight="bold" size={16} className="inline align-middle" /> Multijugador</p>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-6 gap-6">
@@ -400,7 +401,7 @@ export default function Multiplayer({ onBack }: Props) {
               <p className="text-display-lg font-bold tracking-[0.2em] text-[#75ff9e]">{roomCode}</p>
             </div>
             <div className="flex items-center gap-2 text-[#859585]">
-              <span className="animate-pulse">⏳</span>
+              <Hourglass weight="bold" size={18} className="animate-pulse" />
               <p className="text-body-sm">Esperando al rival...</p>
             </div>
           </div>

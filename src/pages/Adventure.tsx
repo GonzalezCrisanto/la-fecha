@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { ArrowLeft, GameController, Sword, Shield, Trophy, UsersThree, SmileyMeh, PauseCircle, ArrowCounterClockwise } from '@phosphor-icons/react'
 import type { Player, RivalTeam } from '../types'
 import {
   createMatchState, cloneState, advanceInterval, generateDecisionPoint,
@@ -381,7 +382,7 @@ export default function Adventure({ squad, rivals, remainingAttempts, onBack, on
       <div className="h-svh flex flex-col items-center justify-center px-4 gap-6 overflow-y-auto" style={PAGE}>
         <div className="text-center">
           <p className="text-label-caps text-[#75ff9e] tracking-widest mb-2">
-            🎮 AVENTURA · {ROUND_LABELS[round].toUpperCase()}
+            <GameController weight="bold" size={14} className="inline align-middle" /> AVENTURA · {ROUND_LABELS[round].toUpperCase()}
           </p>
           <h2 className="text-headline-lg text-[#e1e2ea]">Próximo rival</h2>
         </div>
@@ -434,7 +435,7 @@ export default function Adventure({ squad, rivals, remainingAttempts, onBack, on
           onClick={onBack}
           className="text-body-sm text-[#bacbb9] hover:text-[#e1e2ea] transition-colors shrink-0"
         >
-          ← Inicio
+          <ArrowLeft weight="bold" size={18} className="inline align-middle" /> Inicio
         </button>
         <div className="flex-1 text-center min-w-0">
           {bottom.kind === 'hidden' ? (
@@ -451,7 +452,7 @@ export default function Adventure({ squad, rivals, remainingAttempts, onBack, on
             </span>
           ) : (
             <p className="text-body-sm font-semibold text-[#e1e2ea] truncate">
-              🎮 {ROUND_LABELS[round]}
+              <GameController weight="bold" size={14} className="inline align-middle" /> {ROUND_LABELS[round]}
             </p>
           )}
         </div>
@@ -544,7 +545,7 @@ function FeedCard({ entry }: { entry: FeedEntry }) {
     const isAttack = entry.situationType === 'attack'
     const borderColor = isAttack ? '#75ff9e55' : '#ffb4ab55'
     const headerColor = isAttack ? '#75ff9e' : '#ffb4ab'
-    const headerLabel = isAttack ? '⚔️ ATACÁS' : '🛡️ DEFENDÉS'
+    const headerLabel = isAttack ? <><Sword weight="bold" size={14} className="inline align-middle" /> ATACÁS</> : <><Shield weight="bold" size={14} className="inline align-middle" /> DEFENDÉS</>;
     return (
       <div
         className="rounded-xl p-4 flex flex-col gap-2"
@@ -592,7 +593,7 @@ function FeedCard({ entry }: { entry: FeedEntry }) {
   if (entry.kind === 'round-end') {
     const won   = entry.won
     const color = won ? '#75ff9e' : '#ffb4ab'
-    const label = won ? '🏆 VICTORIA' : (entry.scoreHome === entry.scoreAway ? '🤝 EMPATE — ELIMINADO' : '😔 ELIMINADO')
+    const label = won ? <><Trophy weight="fill" size={14} className="inline align-middle" /> VICTORIA</> : (entry.scoreHome === entry.scoreAway ? <><UsersThree weight="bold" size={14} className="inline align-middle" /> EMPATE — ELIMINADO</> : <><SmileyMeh weight="fill" size={14} className="inline align-middle" /> ELIMINADO</>)
     return (
       <div
         className="rounded-xl p-4 text-center"
@@ -687,7 +688,7 @@ function BottomArea({ bottom, remainingAttempts, onDecide, onContinue, onHalftim
     return (
       <div className="shrink-0 px-4 py-3 border-t flex flex-col gap-2" style={{ background: '#1d2025', borderColor: '#3b4a3d', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
         <p className="text-label-caps px-1" style={{ color: accentColor }}>
-          {isAttack ? '⚔️ ¿QUÉ HACÉS?' : '🛡️ ¿CÓMO DEFENDÉS?'}
+          {isAttack ? <><Sword weight="bold" size={16} className="inline align-middle" /> ¿QUÉ HACÉS?</> : <><Shield weight="bold" size={16} className="inline align-middle" /> ¿CÓMO DEFENDÉS?</>}
         </p>
         <div className="grid grid-cols-2 gap-2">
           {options.map(opt => (
@@ -712,7 +713,7 @@ function BottomArea({ bottom, remainingAttempts, onDecide, onContinue, onHalftim
     return (
       <div className="shrink-0 px-4 py-4 border-t flex flex-col gap-3" style={{ background: '#1d2025', borderColor: '#3b4a3d', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
         <div className="flex items-center justify-between">
-          <p className="text-label-caps font-bold text-[#75ff9e]">⏸ DESCANSO · AJUSTE TÁCTICO</p>
+          <p className="text-label-caps font-bold text-[#75ff9e]"><PauseCircle weight="bold" size={14} className="inline align-middle" /> DESCANSO · AJUSTE TÁCTICO</p>
           <p className="text-label-caps text-[#859585]">45'</p>
         </div>
         <StrategyPicker current={selected} onSelect={setSelected} compact />
@@ -764,7 +765,7 @@ function BottomArea({ bottom, remainingAttempts, onDecide, onContinue, onHalftim
             className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
             style={{ background: '#75ff9e', color: '#003918' }}
           >
-            🔄 Volver a armar equipo
+            <ArrowCounterClockwise weight="bold" size={18} className="inline align-middle" /> Volver a armar equipo
             <span className="ml-2 text-label-caps opacity-70">
               ({remainingAttempts} {remainingAttempts === 1 ? 'chance' : 'chances'})
             </span>
@@ -801,7 +802,7 @@ function BottomArea({ bottom, remainingAttempts, onDecide, onContinue, onHalftim
             className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
             style={{ background: '#75ff9e', color: '#003918' }}
           >
-            🔄 Volver a armar equipo
+            <ArrowCounterClockwise weight="bold" size={18} className="inline align-middle" /> Volver a armar equipo
             <span className="ml-2 text-label-caps opacity-70">
               ({remainingAttempts} {remainingAttempts === 1 ? 'chance' : 'chances'})
             </span>

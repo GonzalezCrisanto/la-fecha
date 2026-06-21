@@ -4,6 +4,7 @@ import {
   FORMATION_SLOTS, BUDGET, MAX_PER_CLUB, teamDisplayName,
 } from '../lib/players'
 import type { Player, Position, GameMode, DailyChallenge, Formation } from '../types'
+import { ArrowLeft, Lightning, GameController, Handshake } from '@phosphor-icons/react'
 
 const POSITIONS: Position[] = ['ARQ', 'DEF', 'MED', 'DEL']
 const FORMATIONS: Formation[] = ['4-3-3', '4-4-2', '3-5-2', '4-2-3-1', '3-4-3', '5-3-2']
@@ -135,11 +136,11 @@ export default function Draft({ mode, onBack, onConfirm }: Props) {
           onClick={onBack}
           className="text-body-sm text-[#bacbb9] hover:text-[#e1e2ea] transition-colors shrink-0"
         >
-          ← Volver
+          <ArrowLeft weight="bold" size={18} className="inline align-middle" /> Volver
         </button>
         <div className="flex-1 text-center min-w-0 px-2">
           <p className="text-body-sm font-semibold text-[#e1e2ea]">
-            {mode === 'sim' ? '⚡ Simulación' : mode === 'adventure' ? '🎮 Aventura' : '🤝 Multijugador'}
+            {mode === 'sim' ? <><Lightning weight="bold" size={14} className="inline align-middle" /> Simulación</> : mode === 'adventure' ? <><GameController weight="bold" size={14} className="inline align-middle" /> Aventura</> : <><Handshake weight="bold" size={14} className="inline align-middle" /> Multijugador</>}
           </p>
           {challenge && mode !== 'multiplayer' && (
             <p className="text-label-caps text-[#859585] truncate">
@@ -334,7 +335,7 @@ export default function Draft({ mode, onBack, onConfirm }: Props) {
             className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
             style={{ background: '#75ff9e', color: '#003918' }}
           >
-            {mode === 'sim' ? '⚡ Simular partido' : mode === 'adventure' ? '🎮 Comenzar aventura' : '🤝 Enviar equipo'}
+            {mode === 'sim' ? <><Lightning weight="bold" size={18} className="inline align-middle" /> Simular partido</> : mode === 'adventure' ? <><GameController weight="bold" size={18} className="inline align-middle" /> Comenzar aventura</> : <><Handshake weight="bold" size={18} className="inline align-middle" /> Enviar equipo</>}
           </button>
         ) : (
           <div className="flex items-center justify-between px-1">

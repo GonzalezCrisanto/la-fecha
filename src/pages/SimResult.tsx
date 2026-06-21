@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { ArrowLeft, ArrowRight, Trophy, UsersThree, SmileyMeh, PauseCircle, Lightning, Star, ArrowCounterClockwise, SoccerBall, Flask } from '@phosphor-icons/react'
 import type { MatchResult, MatchEvent, EventType } from '../lib/simulation'
 import { callSimEngineSecondHalf } from '../lib/simulation'
 import type { Player, RivalTeam } from '../types'
@@ -115,7 +116,7 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
 
   const won = isDone ? liveMyGoals > liveRivalGoals : result.myGoals > result.rivalGoals
   const drew = isDone ? liveMyGoals === liveRivalGoals : result.myGoals === result.rivalGoals
-  const outcomeLabel = won ? '🏆 VICTORIA' : drew ? '🤝 EMPATE' : '😔 DERROTA'
+  const outcomeLabel = won ? <><Trophy weight="fill" size={16} className="inline align-middle" /> VICTORIA</> : drew ? <><UsersThree weight="bold" size={16} className="inline align-middle" /> EMPATE</> : <><SmileyMeh weight="fill" size={16} className="inline align-middle" /> DERROTA</>
   const outcomeColor = won ? '#75ff9e' : drew ? '#ffde6e' : '#ffb4ab'
 
   const finalMyGoals = isLive ? liveMyGoals : (isDone ? liveMyGoals : result.myGoals)
@@ -139,11 +140,11 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
           }}
           className="text-body-sm text-[#bacbb9] hover:text-[#e1e2ea] transition-colors"
         >
-          ← Inicio
+          <ArrowLeft weight="bold" size={18} className="inline align-middle" /> Inicio
         </button>
         <div className="flex-1 text-center">
           {phase === 'halftime-break' ? (
-            <span className="text-label-caps font-bold text-[#ffde6e]">⏸ ENTRETIEMPO</span>
+            <span className="text-label-caps font-bold text-[#ffde6e]"><PauseCircle weight="bold" size={14} className="inline align-middle" /> ENTRETIEMPO</span>
           ) : isLive ? (
             <span className="inline-flex items-center gap-1.5 text-label-caps font-bold text-[#ff5252]">
               <span
@@ -153,7 +154,7 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
               EN VIVO
             </span>
           ) : (
-            <p className="text-body-sm font-semibold text-[#e1e2ea]">⚡ Simulación</p>
+            <p className="text-body-sm font-semibold text-[#e1e2ea]"><Lightning weight="bold" size={14} className="inline align-middle" /> Simulación</p>
           )}
         </div>
       </header>
@@ -176,7 +177,7 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
           </div>
           <p className="text-headline-lg text-[#3b4a3d] font-bold mt-4">—</p>
           <div className="text-center">
-            <p className="text-label-caps text-[#859585] mb-1 truncate max-w-[100px]">
+            <p className="text-label-caps text-[#859585] mb-1 truncate max-w-[8rem]">
               {teamDisplayName(rival.name).toUpperCase()}
             </p>
             <p
@@ -189,8 +190,8 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
         </div>
         {isDone && (
           <div className="mt-3 flex justify-center gap-6 text-label-caps text-[#859585]">
-            <span>⭐ Calidad tuya: <span className="text-[#75ff9e]">{result.myOverall}</span>/99</span>
-            <span>⭐ Calidad rival: <span className="text-[#e1e2ea]">{result.rivalOverall}</span>/99</span>
+            <span><Star weight="fill" size={14} className="inline align-middle" /> Calidad tuya: <span className="text-[#75ff9e]">{result.myOverall}</span>/99</span>
+            <span><Star weight="fill" size={14} className="inline align-middle" /> Calidad rival: <span className="text-[#e1e2ea]">{result.rivalOverall}</span>/99</span>
           </div>
         )}
       </div>
@@ -256,7 +257,7 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
             className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
             style={{ background: '#75ff9e', color: '#003918' }}
           >
-            {halfStrategy !== initialStrategy ? '🔄 Cambiar táctica y arrancar ST →' : 'Arrancar segundo tiempo →'}
+            {halfStrategy !== initialStrategy ? <><ArrowCounterClockwise weight="bold" size={18} className="inline align-middle" /> Cambiar táctica y arrancar ST <ArrowRight weight="bold" size={18} className="inline align-middle" /></> : 'Arrancar segundo tiempo →'}
           </button>
         </div>
       )}
@@ -299,7 +300,7 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
               className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
               style={{ background: '#ffde6e', color: '#2a1f00' }}
             >
-              🥅 Ir a penales →
+              <SoccerBall weight="bold" size={18} className="inline align-middle" /> Ir a penales <ArrowRight weight="bold" size={18} className="inline align-middle" />
             </button>
           )}
           {!drew && onPenalties && (
@@ -308,7 +309,7 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
               className="w-full py-3 rounded-xl text-body-sm transition-all text-[#859585]"
               style={{ background: 'transparent', border: '1px dashed #3b4a3d' }}
             >
-              🧪 Probar penales
+              <Flask weight="bold" size={18} className="inline align-middle" /> Probar penales
             </button>
           )}
           {remainingAttempts > 0 ? (
@@ -317,7 +318,7 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
               className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
               style={{ background: '#75ff9e', color: '#003918' }}
             >
-              🔄 Volver a armar equipo
+              <ArrowCounterClockwise weight="bold" size={18} className="inline align-middle" /> Volver a armar equipo
               <span className="ml-2 text-label-caps opacity-70">
                 ({remainingAttempts} {remainingAttempts === 1 ? 'chance' : 'chances'})
               </span>

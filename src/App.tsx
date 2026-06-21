@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ArrowLeft, ArrowRight } from '@phosphor-icons/react'
 import Home from './pages/Home'
 import Draft from './pages/Draft'
 import SimResult from './pages/SimResult'
@@ -273,7 +274,7 @@ function SimStrategyScreen({ rival, strategy, onSelect, onConfirm, onBack }: {
         style={{ background: '#1d2025', borderColor: '#3b4a3d' }}
       >
         <button onClick={onBack} className="text-body-sm text-[#bacbb9] hover:text-[#e1e2ea] transition-colors">
-          ← Volver
+          <ArrowLeft weight="bold" size={18} className="inline align-middle" /> Volver
         </button>
         <p className="flex-1 text-center text-body-sm font-semibold text-[#e1e2ea]">
           Estrategia · vs {teamDisplayName(rival.name)}
@@ -306,7 +307,7 @@ function SimStrategyScreen({ rival, strategy, onSelect, onConfirm, onBack }: {
           className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
           style={{ background: '#75ff9e', color: '#003918' }}
         >
-          Simular partido →
+          Simular partido <ArrowRight weight="bold" size={18} className="inline align-middle" />
         </button>
       </div>
     </div>
