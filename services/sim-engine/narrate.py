@@ -36,6 +36,29 @@ OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "sim")
 # ── Templates ─────────────────────────────────────────────────────────────────
 # Cada lista tiene 5 variantes. Se elige con rng.choice → reproducible con seed.
 
+# Corner outcomes: (tipo_narration, template)
+# tipo drives the icon on the frontend: corner=🚩 cleared, ocasion_errada=💨 off-target, atajada=🧤 saved
+CORNER_OUTCOMES = [
+    # Cleared by defense
+    ("corner",         "Córner ejecutado por {player}, centro al segundo palo, cabecea {header}… ¡DESPEJADO en la línea! Casi."),
+    ("corner",         "Córner de {player}, pelota que baja al área chica, forcejeo, y la defensa la saca como puede. Qué lío en el área."),
+    ("corner",         "Córner de {player}, centro largo al segundo palo, {header} la baja de pecho y remata… ¡Bloqueado por la defensa!"),
+    ("corner",         "Córner de {player}, pelota al área chica, {header} cabecea… despejado por la defensa sobre la misma línea. ¡De milagro!"),
+    ("corner",         "{player} ejecuta el córner con rosca, la pelota baja al área chica… {header} no llega y la defensa la saca."),
+    # Off target / hit woodwork
+    ("ocasion_errada", "Tiro de esquina de {player}, pelota envenenada al primer palo, {header} la toca… ¡AFUERA por poco! Estuvo cerquísima."),
+    ("ocasion_errada", "{player} ejecuta el córner, centro preciso, sube {header}… ¡Cabezazo al travesaño! El palo vibró."),
+    ("ocasion_errada", "{player} opta por el córner corto, combina con el compañero, tira desde afuera del área… ¡Se va afuera!"),
+    ("ocasion_errada", "Córner de {player}, bola al segundo palo, {header} cabecea con fuerza… ¡Al palo! El estadio se paraliza."),
+    ("ocasion_errada", "{player} ejecuta el córner con rosca, {header} sube y la pica de cabeza… ¡Afuera por centímetros!"),
+    # Saved by goalkeeper
+    ("atajada",        "Tiro de esquina de {player}, pelota que se mete directo al arco… ¡El arquero la atrapa en el último momento!"),
+    ("atajada",        "{player} ejecuta el córner con rosca, la pelota se curva… {header} cabecea pero el arquero la ataja firme."),
+    ("atajada",        "Tiro de esquina de {player}, bola envenenada al área, {header} la toca de cabeza… ¡El arquero la saca de un puñetazo en el aire!"),
+    ("atajada",        "Córner de {player}, centro al primer palo, {header} cabecea a quemarropa… ¡ATAJADA increíble del arquero!"),
+    ("atajada",        "{player} coloca el córner perfecto, {header} cabecea sin marca… pero el arquero se lanza y la desvía al córner."),
+]
+
 TEMPLATES = {
 
     "arranque": [
@@ -159,39 +182,6 @@ TEMPLATES = {
         "{min}' — {player} ({team}) pierde la cabeza y se va expulsado. {team} deberá remar cuesta arriba.",
     ],
 
-    "save": [
-        "¡Tapada increíble de {player} a los {min}'! El arquero evitó el gol "
-        "con una intervención de categoría.",
-
-        "{player} voló a los {min}' para sacar el remate al córner. "
-        "El equipo le debe el resultado.",
-
-        "¡{player} apareció bajo los tres palos a los {min}'! Salvó al equipo "
-        "de manera espectacular.",
-
-        "{min}' — Atajada clave de {player}. El remate iba adentro pero el arquero "
-        "se estiró y la sacó.",
-
-        "Pelotazo que iba adentro a los {min}', pero {player} se estiró y la desvió "
-        "con la punta de los dedos.",
-    ],
-
-    "bigChanceMissed": [
-        "{player} quedó solo ante el arco a los {min}' y no pudo definir. "
-        "Una enorme ocasión desperdiciada.",
-
-        "¡Increíble el fallo de {player} a los {min}'! La pelota se fue afuera "
-        "con el arco completamente libre.",
-
-        "Gran ocasión para {player} a los {min}', pero el balón se fue besando el palo "
-        "hacia afuera.",
-
-        "{min}' — {player} no convirtió una chance clarísima. Se lamenta en el campo.",
-
-        "Gol cantado que no entró. {player} quedó mano a mano pero erró el remate a "
-        "los {min}'.",
-    ],
-
     "entretiempo": [
         "Pitazo del árbitro. Finaliza el primer tiempo: {home_team} {sh} – {sa} {away_team}.",
         "Se van al descanso. Al cabo de 45 minutos el marcador señala "
@@ -213,15 +203,6 @@ TEMPLATES = {
         "{home_team} {sh} – {sa} {away_team}.",
         "{min}' — Gol en contra de {player} ({team}). Intento de despejar y terminó adentro. "
         "{home_team} {sh} – {sa} {away_team}.",
-    ],
-
-    "corner": [
-        "Córner para {team}. {player} va a ejecutar desde la bandera.",
-        "{team} gana un córner a los {min}'. {player} se acerca al banderín.",
-        "Córner a los {min}' para {team}. {player} coloca la pelota en el arco.",
-        "Tiro de esquina para {team} a los {min}'. {player} buscará a los suyos en el área.",
-        "Córner a favor de {team}. {player} ejecuta desde el sector derecho.",
-        "{min}' — Córner. {team} genera otro balón parado peligroso. Lo ejecuta {player}.",
     ],
 
     "offside": [
@@ -276,19 +257,6 @@ TEMPLATES = {
         "Tiro libre de {player}, bien colocado al ángulo… ¡La madera! El travesaño vibró.",
     ],
 
-    "corner_sequence": [
-        "Córner ejecutado por {player}, centro al segundo palo, cabecea {header}… ¡DESPEJADO en la línea! Casi.",
-        "Tiro de esquina de {player}, pelota envenenada al primer palo, {header} la toca… ¡AFUERA por poco! Estuvo cerquísima.",
-        "{player} ejecuta el córner, centro preciso, sube {header}… ¡Cabezazo al travesaño! El palo vibró.",
-        "Córner de {player}, pelota que baja al área chica, forcejeo, y la defensa la saca como puede. Qué lío.",
-        "Tiro de esquina de {player}, pelota que se mete directo al arco… ¡El arquero la atrapa en el último momento!",
-        "{player} ejecuta el córner con rosca, la pelota se curva… {header} cabecea pero el arquero la ataja firme.",
-        "Córner de {player}, centro largo al segundo palo, {header} la baja de pecho y remata… ¡Bloqueado por la defensa!",
-        "{player} opta por el córner corto, combina con el compañero, tira desde afuera del área… ¡Se va afuera!",
-        "Tiro de esquina de {player}, pelota al área chica, {header} cabecea… ¡ADENTRO! ¡Gol de córner directo casi!",
-        "Córner de {player}, pelota rebotada en el área, corrida… la defensa la salva antes de que entre.",
-    ],
-
     "corner_base": [
         "Córner para {team} a los {min}'. {player} va a ejecutar desde la bandera.",
         "{team} gana un córner a los {min}'. {player} se acerca al banderín de esquina.",
@@ -296,19 +264,6 @@ TEMPLATES = {
         "Córner a favor de {team} a los {min}'. {player} buscará a los suyos en el área.",
         "{min}' — Córner. {team} genera otro balón parado peligroso. Lo ejecuta {player}.",
         "Pelota al córner, saque de esquina para {team} a los {min}'. Ejecuta {player}.",
-    ],
-
-    "corner_sin_gol": [
-        "Córner ejecutado por {player}, centro al segundo palo, cabecea {header}… ¡DESPEJADO en la línea! Casi.",
-        "Tiro de esquina de {player}, pelota envenenada al primer palo, {header} la toca… ¡AFUERA por poco! Estuvo cerquísima.",
-        "{player} ejecuta el córner, centro preciso, sube {header}… ¡Cabezazo al travesaño! El palo vibró.",
-        "Córner de {player}, pelota que baja al área chica, forcejeo, y la defensa la saca como puede. Qué lío en el área.",
-        "Tiro de esquina de {player}, pelota que se mete directo al arco… ¡El arquero la atrapa en el último momento!",
-        "{player} ejecuta el córner con rosca, la pelota se curva… {header} cabecea pero el arquero la ataja firme.",
-        "Córner de {player}, centro largo al segundo palo, {header} la baja de pecho y remata… ¡Bloqueado por la defensa!",
-        "{player} opta por el córner corto, combina con el compañero, tira desde afuera del área… ¡Se va afuera!",
-        "Córner de {player}, pelota al área chica, {header} cabecea… despejado por la defensa sobre la misma línea. ¡De milagro!",
-        "Tiro de esquina de {player}, bola envenenada al área, {header} la toca de cabeza… ¡El arquero la saca de un puñetazo en el aire!",
     ],
 
     "gol_de_corner": [
@@ -453,9 +408,7 @@ TYPE_TAG = {
     "figura":         "  FIGURA ",
     "resumen":        " RESUMEN ",
     "falta":          "  FALTA  ",
-    "penal":          "  PENAL  ",
     "var_anulado":    "VAR(ANUL)",
-    "corner_outcome": "CRN-OUT  ",
 }
 
 
@@ -646,6 +599,24 @@ def synthesize_extra_events(rep_match, rng, start_minute=1, end_minute=90):
                     "player": fouler["name"],
                     "minute": free_minute(),
                     "zone":   "normal",
+                })
+
+        # Guarantee a falta event for every free kick goal that wasn't linked above.
+        # Without this, goals whose source is "free_kick" silently update the score
+        # but produce no narration event, causing the frontend goal counter to desync.
+        for fkg in fk_goals:
+            if id(fkg) not in fk_goals_used:
+                fk_goals_used.add(id(fkg))
+                fouler = rng.choice(foulers)
+                events.append({
+                    "side":           side,
+                    "type":           "falta",
+                    "player":         fouler["name"],
+                    "minute":         fkg["minute"],
+                    "zone":           "danger",
+                    "free_kick_type": "to_goal",
+                    "fk_scorer":      fkg["player"],
+                    "fk_minute":      fkg["minute"],
                 })
 
     return events
@@ -951,13 +922,17 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
                         "texto":  pick("var_gol"),
                     })
             else:
-                # Base announcement + outcome sequence
+                # Two separate items: announcement → typed outcome
                 base_text = pick("corner_base", player=player, team=team, min=minute)
-                outcome_text = pick("corner_sin_gol", player=player, header=header)
-                full_text = base_text + " " + outcome_text
+                outcome_tipo, outcome_tpl = rng.choice(CORNER_OUTCOMES)
+                outcome_text = outcome_tpl.format(player=player, header=header)
                 narration.append({
                     "minuto": minute, "tipo": "corner", "side": side, "player": player,
-                    "texto":  full_text,
+                    "texto":  base_text,
+                })
+                narration.append({
+                    "minuto": minute, "tipo": outcome_tipo, "side": side, "player": player,
+                    "texto":  outcome_text,
                 })
 
         elif ev_type == "offside":
@@ -973,12 +948,16 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
             ann_text = pick("penal_a_favor", player=player, team=team, min=minute)
             if converted:
                 result_text = pick("penal_convertido", player=player, min=minute)
+                # tipo "gol" so the frontend live-score counter picks it up
+                narration_tipo = "gol"
             else:
                 result_text = pick("penal_fallado", player=player, min=minute)
+                # tipo "atajada" so the save icon renders (most failed penalties
+                # involve the keeper; semantically close enough for misses too)
+                narration_tipo = "atajada"
             full_text = ann_text + " " + result_text
             narration.append({
-                "minuto": minute, "tipo": "penal", "side": side, "player": player,
-                "converted": converted,
+                "minuto": minute, "tipo": narration_tipo, "side": side, "player": player,
                 "texto":  full_text,
             })
 
@@ -1215,9 +1194,8 @@ def main():
                                        and e.get("player") in ev["texto"]
                                        for e in rep.get("events", [])))
     # Simple check: total goles narrados == rep score
-    # Penales convertidos se narran con tipo "penal" (no "gol"), pero sí cuentan al marcador.
-    goles_narrados = sum(1 for ev in narration if ev["tipo"] in ("gol", "gol_en_contra")) + \
-                     sum(1 for ev in narration if ev["tipo"] == "penal" and ev.get("converted"))
+    # Penales convertidos ahora emiten tipo "gol", mismos que el resto.
+    goles_narrados = sum(1 for ev in narration if ev["tipo"] in ("gol", "gol_en_contra"))
     assert goles_narrados == sh + sa, (
         f"Goles narrados {goles_narrados} ≠ marcador {sh+sa}"
     )
