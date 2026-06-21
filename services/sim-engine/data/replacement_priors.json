@@ -14,7 +14,7 @@
     "floor_assists": 0
   },
   "DEF": {
-    "goals_per_90": 0,
+    "goals_per_90": 0.015,
     "assists_per_90": 0,
     "fouls_per_90": 1.0162,
     "fouls_per_match": 0.8361,

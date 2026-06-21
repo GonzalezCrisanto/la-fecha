@@ -4,7 +4,7 @@ Motor Monte Carlo — simulación de partidos LPF 2026.
 Diseño de goles (correlacionado, no independiente):
   1. xG por equipo = Σ player.goals_per_90_shrunk
   2. Ajuste por fuerza del equipo, debilidad defensiva del rival,
-     ventaja de localía, y TÁCTICAS (Fase 2)
+     calidad de quite del equipo contrario, y TÁCTICAS (Fase 2)
   3. total_goals ~ Poisson(xG_ajustado)   ← TEAM level
   4. Distribución entre jugadores via multinomial ∝ tasas individuales
      → player goals correlacionados porque comparten el mismo total
@@ -15,8 +15,6 @@ Tácticas (Fase 2) — todos los multiplicadores son 1.0 si no se especifican:
     Contraataque: bonus ×1.15 si el rival juega ofensiva/ultra_ofensiva
   - Intensidad  (alta/media/baja): más tarjetas y fatiga (alta); más solidez (baja)
     Fatiga: si intensity="alta", xG en min 75-90 se reduce ×0.80
-  - Capitán     (captain_id): dobla puntos fantasy del jugador designado
-    Si el capitán no juega (red_card antes de min 1), vicecapitán hereda ×2 (V2.1)
 
 Scoring fantasy V2 (sincronizado con lib/scoring.ts — 2026-06-15):
   - own_goal: -6 pts (era -4)
@@ -98,6 +96,17 @@ FORMATION_MULTIPLIERS = {
 }
 FORMATIONS_SUPPORTED = set(FORMATION_MULTIPLIERS.keys())
 
+# Maps each formation to (DEF, MED, DEL) target counts.
+# Used to derive the effective formation from the actual lineup.
+_FORMATION_TARGETS = {
+    "3-4-3":   (3, 4, 3),
+    "4-3-3":   (4, 3, 3),
+    "3-5-2":   (3, 5, 2),
+    "4-4-2":   (4, 4, 2),
+    "4-2-3-1": (4, 5, 1),
+    "5-3-2":   (5, 3, 2),
+}
+
 # Mentalidad: (mult_attack, mult_defense, card_mult)
 # mult_attack  → multiplica xG propio
 # mult_defense → multiplica la solidez defensiva propia (reduce xG rival)
@@ -131,7 +140,6 @@ _DEFAULT_TACTICS = {
     "formation":  None,         # sin formación → multiplicador 1.0
     "mentality":  "equilibrada",
     "intensity":  "media",
-    "captain_id": None,
 }
 
 
@@ -256,15 +264,50 @@ def _intensity(tactics):
     i = tactics.get("intensity", "media")
     return INTENSITY_PARAMS.get(i, INTENSITY_PARAMS["media"])
 
+def _effective_formation(lineup: list) -> str:
+    """Derives the actual formation from lineup positions, finding the nearest match."""
+    from collections import Counter
+    counts  = Counter(p.get("position", "MED") for p in lineup)
+    n_def, n_med, n_del = counts.get("DEF", 0), counts.get("MED", 0), counts.get("DEL", 0)
+    best, best_dist = "4-4-2", float("inf")
+    for form, (d, m, f) in _FORMATION_TARGETS.items():
+        dist = abs(n_def - d) + abs(n_med - m) + abs(n_del - f)
+        if dist < best_dist:
+            best_dist, best = dist, form
+    return best
+
+
+# ── Calidad de quite de balón ──────────────────────────────────────────────────
+
+def compute_tackle_rating(player: dict) -> float:
+    """
+    Deriva la calidad de quite de balón (0–1) a partir de posición y rating_mean.
+    DEF: alto peso; MED: medio; DEL: bajo (presión); ARQ: mínimo.
+    """
+    pos    = player.get("position", "MED")
+    profile = resolve_profile(player)
+    rating = profile.get("rating_mean", 6.5)
+    pos_factor = {"ARQ": 0.05, "DEF": 0.80, "MED": 0.55, "DEL": 0.25}.get(pos, 0.40)
+    normalized = max(0.0, min(1.0, (rating - 5.0) / 3.5))
+    return normalized * pos_factor
+
+
+def compute_team_tackle_quality(lineup: list) -> float:
+    """Calidad media de quite del equipo (0–1). Usada para reducir xG del rival."""
+    if not lineup:
+        return 0.5
+    return sum(compute_tackle_rating(p) for p in lineup) / len(lineup)
+
 
 # ── xG ajustado por equipo ────────────────────────────────────────────────────
 
-def compute_team_xg(lineup, own_team, opp_team, is_home,
-                    own_tactics=None, opp_tactics=None):
+def compute_team_xg(lineup, own_team, opp_team,
+                    own_tactics=None, opp_tactics=None,
+                    opp_tackle_quality=0.5):
     """
     xG del equipo = Σ player.goals_per_90_shrunk
     × sqrt(own_atk_effective / opp_def_effective)
-    × loc_factor
+    × tackle_xg_mult
 
     own_atk_effective = team_atk_base × formation_atk × mentality_atk × contraataque_bonus
     opp_def_effective = team_def_base × opp_formation_def × opp_mentality_def × opp_intensity_def
@@ -279,7 +322,7 @@ def compute_team_xg(lineup, own_team, opp_team, is_home,
     own_atk = team_strengths.get(own_team, {}).get("attack_strength",  1.0)
     opp_def = team_strengths.get(opp_team, {}).get("defense_strength", 1.0)
 
-    own_form = _formation_mult(own_tactics)
+    own_form = FORMATION_MULTIPLIERS.get(_effective_formation(lineup), {"attack": 1.0, "defense": 1.0})
     opp_form = _formation_mult(opp_tactics)
     own_ment = _mentality(own_tactics)
     opp_ment = _mentality(opp_tactics)
@@ -301,9 +344,9 @@ def compute_team_xg(lineup, own_team, opp_team, is_home,
     effective_def = opp_def * def_mult
     strength_mult = math.sqrt(max(effective_atk / max(effective_def, 0.01), 0.1))
 
-    loc_factor = consts["home_factor"] if is_home else consts["away_factor"]
-
-    return raw_xg * strength_mult * loc_factor
+    # Better tacklers reduce opponent xG (range: ±9% at extremes, neutral at 0.5)
+    tackle_xg_mult = 1.15 - (opp_tackle_quality * 0.30)
+    return raw_xg * strength_mult * tackle_xg_mult
 
 
 # ── Tarjetas ──────────────────────────────────────────────────────────────────
@@ -318,10 +361,12 @@ def simulate_cards(player, fouls, position, consts, card_mult=1.0,
     yellow   = 1 if random.random() < p_yellow else 0
 
     pos_mult  = consts["red_position_multiplier"].get(position, 1.0)
-    fouls_p90 = player.get("fouls_per_90", player.get("fouls_per_match", 1.0))
+    fouls_p90 = player.get("fouls_per_90", 1.0)
     foul_mult = (consts["red_high_foul_multiplier"]
                  if fouls_p90 >= consts["red_high_foul_threshold"] else 1.0)
-    p_red = consts["red_base_prob"] * pos_mult * foul_mult * card_mult
+    # Fouls committed in this simulation also increase red card risk (continuous scale).
+    fouls_scale = 1.0 + min(fouls, 6) * 0.20
+    p_red = consts["red_base_prob"] * pos_mult * foul_mult * card_mult * fouls_scale
     red   = 1 if random.random() < p_red else 0
     red_min = random.randint(start_minute, end_minute) if red else None
 
@@ -361,10 +406,15 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
               "goals_home_late": 0, "goals_away_late": 0}
 
     # ── 1. xG por equipo (incluye tácticas, escalado al tiempo simulado) ──────
+    # Calidad de quite de cada equipo (para reducir xG del rival)
+    home_tackle_q = compute_team_tackle_quality(home_lineup)
+    away_tackle_q = compute_team_tackle_quality(away_lineup)
     xg_home = compute_team_xg(home_lineup, home_team, away_team,
-                               is_home=True,  own_tactics=tactics_home, opp_tactics=tactics_away) * duration_factor
+                               own_tactics=tactics_home, opp_tactics=tactics_away,
+                               opp_tackle_quality=away_tackle_q) * duration_factor
     xg_away = compute_team_xg(away_lineup, away_team, home_team,
-                               is_home=False, own_tactics=tactics_away, opp_tactics=tactics_home) * duration_factor
+                               own_tactics=tactics_away, opp_tactics=tactics_home,
+                               opp_tackle_quality=home_tackle_q) * duration_factor
 
     # ── 2. Tarjetas y efecto 10 hombres ───────────────────────────────────────
     home_red_min = away_red_min = None
@@ -381,8 +431,16 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
             profile = resolve_profile(player)
             mins    = player.get("minutes", 90)
 
-            fouls_rate = profile.get("fouls_per_90", profile["fouls_per_match"])
+            fouls_rate = profile.get("fouls_per_90", 1.0)
             fouls = poisson_sample(fouls_rate * duration_factor)
+            # Faltas por intentos fallidos de quite (posición-dependientes)
+            tackle_rating   = compute_tackle_rating(player)
+            pos_attempts    = {"ARQ": 0, "DEF": 6, "MED": 4, "DEL": 2}.get(pos, 2)
+            tackle_attempts = poisson_sample(pos_attempts * duration_factor)
+            if tackle_attempts > 0:
+                failed_tackles = poisson_sample(tackle_attempts * max(0.0, 1.0 - tackle_rating))
+                if failed_tackles > 0:
+                    fouls += poisson_sample(failed_tackles * 0.18)
             yellow, red, red_min = simulate_cards(
                 profile, fouls, pos, consts, team_card_mult, start_minute, end_minute)
 
@@ -406,6 +464,13 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
         xg_home, xg_away = apply_ten_men(xg_home, xg_away, home_red_min, consts)
     if away_red_min is not None:
         xg_away, xg_home = apply_ten_men(xg_away, xg_home, away_red_min, consts)
+
+    # ── Efecto de hombres de menos pre-simulación (expulsados en el tiempo anterior) ──
+    # red_minute=0 → remaining=1.0 → aplica el multiplicador completo a toda la ventana
+    for _ in range(max(0, 11 - len(home_lineup))):
+        xg_home, xg_away = apply_ten_men(xg_home, xg_away, 0, consts)
+    for _ in range(max(0, 11 - len(away_lineup))):
+        xg_away, xg_home = apply_ten_men(xg_away, xg_home, 0, consts)
 
     # ── 3. Goles — Poisson con fatiga (fatiga en min 76-90) ──────────────────
     def _draw_goals_with_fatigue(xg, intensity_str):
@@ -543,11 +608,81 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
     # Los eventos de gol se generaron con atribución completa (scorer + assister)
     # dentro del loop de stats de arriba; no hace falta agregar eventos genéricos.
 
+    # ── 3b. Penales ───────────────────────────────────────────────────────────
+    penalty_prob = 0.12 * duration_factor
+    for pen_side, pen_lineup in [("home", home_lineup), ("away", away_lineup)]:
+        if random.random() < penalty_prob:
+            takers = [(i, p) for i, p in enumerate(pen_lineup)
+                      if p["position"] in ("DEL", "MED")]
+            if not takers:
+                takers = list(enumerate(pen_lineup))
+            weights = [resolve_profile(p)["goals_per_90_shrunk"] for _, p in takers]
+            if sum(weights) == 0:
+                weights = [1.0] * len(weights)
+            pen_idx_local = random.choices(range(len(weights)), weights=weights)[0]
+            pen_player_data = takers[pen_idx_local][1]
+            pen_name = pen_player_data.get("name", "") or pen_player_data.get("position", "")
+            converted = random.random() < 0.78
+            pen_minute = random.randint(start_minute, end_minute)
+            result["events"].append({
+                "side":       pen_side,
+                "type":       "penal",
+                "playerName": pen_name,
+                "converted":  converted,
+                "minute":     pen_minute,
+            })
+            if converted:
+                if pen_side == "home":
+                    result["score_home"] += 1
+                else:
+                    result["score_away"] += 1
+                # Credit the goal to the taker in the player stats
+                for stat in result[pen_side]:
+                    if stat["name"] == pen_name:
+                        stat["goals"] += 1
+                        break
+                # Add a goal event for narration (marked as penalty to avoid double narration)
+                result["events"].append({
+                    "side":     pen_side,
+                    "type":     "goal",
+                    "player":   pen_name,
+                    "assister": None,
+                    "minute":   pen_minute,
+                    "_penalty": True,
+                })
+
+    # ── Tag each open-play goal with a source field ──────────────────────────
+    for ev in result["events"]:
+        if ev.get("type") != "goal":
+            continue
+        if ev.get("_penalty"):
+            continue
+        r = random.random()
+        if r < 0.12:
+            ev["source"] = "corner"
+            # Pick a corner taker: MED or DEL from the same team, different from scorer if possible
+            side = ev.get("side", "home")
+            lineup = home_lineup if side == "home" else away_lineup
+            candidates = [p for p in lineup
+                          if p.get("position") in ("MED", "DEL") and p.get("name")
+                          and p.get("name") != ev.get("player")]
+            if not candidates:
+                candidates = [p for p in lineup
+                              if p.get("position") in ("MED", "DEL") and p.get("name")]
+            if candidates:
+                ev["corner_taker"] = random.choice(candidates)["name"]
+            else:
+                ev["corner_taker"] = ev.get("player", "")
+        elif r < 0.20:
+            ev["source"] = "free_kick"
+        else:
+            ev["source"] = "open_play"
+
     result["events"].sort(key=lambda e: e["minute"])
 
     # ── Gol en contra (probabilidad baja por partido) ─────────────────────────
-    OWN_GOAL_PROB = 0.04
-    if random.random() < OWN_GOAL_PROB:
+    own_goal_prob = consts.get("own_goal_prob", 0.008)
+    if random.random() < own_goal_prob:
         og_team = random.choice(["home", "away"])
         og_opp  = "away" if og_team == "home" else "home"
         candidates = [p for p in result[og_team] if p["position"] in ("DEF", "MED")]
@@ -574,8 +709,8 @@ def simulate_one(home_lineup, away_lineup, home_team="", away_team="",
 
 # ── Puntos fantasy ────────────────────────────────────────────────────────────
 
-def calc_points(stat, goals_against, is_captain=False):
-    """Calcula puntos fantasy V2. is_captain=True dobla el total."""
+def calc_points(stat, goals_against):
+    """Calcula puntos fantasy V2."""
     pos = stat["position"]
     pts = 0
     pts += stat["goals"]       * SCORING_RULES["goal"].get(pos, 6)
@@ -604,27 +739,22 @@ def calc_points(stat, goals_against, is_captain=False):
             pts += r_rules["low"]
         # zona neutral [6.0, 7.5): sin bonus ni penalización
 
-    if is_captain:
-        pts *= 2
     return pts
 
 
 # ── API pública ───────────────────────────────────────────────────────────────
 
 def simulate_match(home_lineup, away_lineup, home_team="", away_team="",
-                   tactics_home=None, tactics_away=None, n_sims=10_000,
+                   tactics_home=None, tactics_away=None, n_sims=1,
                    start_minute=1, end_minute=90,
-                   booked_home=None, booked_away=None):
+                   booked_home=None, booked_away=None,
+                   ht_score_home=0, ht_score_away=0):
     """
     Corre n_sims iteraciones y devuelve stats agregadas.
     tactics_home/away: ver _DEFAULT_TACTICS para los keys soportados.
-    captain_id en tactics: el jugador designado recibe ×2 en puntos fantasy.
     """
     tactics_home = tactics_home or {}
     tactics_away = tactics_away or {}
-
-    cap_id_home = tactics_home.get("captain_id")
-    cap_id_away = tactics_away.get("captain_id")
 
     agg        = {"home": defaultdict(lambda: defaultdict(float)),
                   "away": defaultdict(lambda: defaultdict(float))}
@@ -643,7 +773,10 @@ def simulate_match(home_lineup, away_lineup, home_team="", away_team="",
         last_m = m
         sh, sa = m["score_home"], m["score_away"]
         score_dist[f"{sh}-{sa}"] += 1
-        outcomes["home" if sh > sa else "draw" if sh == sa else "away"] += 1
+        # win_probs account for first-half score when provided
+        total_h = sh + ht_score_home
+        total_a = sa + ht_score_away
+        outcomes["home" if total_h > total_a else "draw" if total_h == total_a else "away"] += 1
         total_sh      += sh;        total_sa      += sa
         total_sh_late += m["goals_home_late"]
         total_sa_late += m["goals_away_late"]
@@ -655,8 +788,7 @@ def simulate_match(home_lineup, away_lineup, home_team="", away_team="",
         ga_home = sa
         ga_away = sh
         for side in ("home", "away"):
-            ga     = ga_home if side == "home" else ga_away
-            cap_id = cap_id_home if side == "home" else cap_id_away
+            ga = ga_home if side == "home" else ga_away
             for p in m[side]:
                 key = p["id"] or p["name"]
                 a   = agg[side][key]
@@ -667,7 +799,7 @@ def simulate_match(home_lineup, away_lineup, home_team="", away_team="",
                 a["minutes"]     += p["minutes"]
                 a["rating"]      += p["rating"]
                 a["_count"]      += 1
-                a["_pts"]        += calc_points(p, ga, is_captain=(p["id"] == cap_id and cap_id is not None))
+                a["_pts"]        += calc_points(p, ga)
                 a["_name"]        = p["name"]
                 a["_pos"]         = p["position"]
 
@@ -767,8 +899,8 @@ def calibrate(n_sims=10_000):
     print(f"\n{'═'*55}")
     print(f" Calibración — {n_sims:,} simulaciones (genérico 4-4-2, sin tácticas)")
     print(f"{'═'*55}")
-    print(f" Goles promedio local    : {avg_sh:.3f}  (target real: {consts['goals_home_mean']:.3f})")
-    print(f" Goles promedio visitante: {avg_sa:.3f}  (target real: {consts['goals_away_mean']:.3f})")
+    print(f" Goles promedio equipo A : {avg_sh:.3f}")
+    print(f" Goles promedio equipo B : {avg_sa:.3f}")
     print(f" Goles promedio/equipo   : {(avg_sh+avg_sa)/2:.3f}  (target real: {league_target:.3f})")
     print()
     print(f" Win probs  local/empate/visitante: "

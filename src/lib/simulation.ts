@@ -279,9 +279,12 @@ interface EngineResult {
 
 const POS_FOUL_BASELINE: Record<string, number> = { ARQ: 0.1, DEF: 0.9, MED: 1.1, DEL: 1.3 }
 
+// Positional ceilings prevent absurd rates from players with small sample sizes.
+const GOALS_PER_90_CAP: Record<string, number> = { ARQ: 0.02, DEF: 0.15, MED: 0.40, DEL: 0.65 }
+
 function toEnginePlayer(p: Player) {
   const seasonMins = Math.max(p.minutes, 90)
-  const goals90    = (p.goals   / seasonMins) * 90
+  const goals90    = Math.min((p.goals   / seasonMins) * 90, GOALS_PER_90_CAP[p.position] ?? 0.65)
   const assists90  = (p.assists / seasonMins) * 90
   // Reverse-engineer fouls from yellow cards (LPF avg: 1 yellow ≈ 3.6 fouls)
   const fouls90 = p.yellowCards > 0
@@ -323,8 +326,8 @@ export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: n
   const body = {
     home_team: 'Tu Equipo',
     away_team: rival.name,
-    tactics_home: { formation: formation ?? null, mentality: STRATEGY_MENTALITY[strategy] ?? 'equilibrada', intensity: 'media', captain_id: null },
-    tactics_away: { formation: rival.formation ?? null, mentality: 'equilibrada', intensity: 'media', captain_id: null },
+    tactics_home: { formation: formation ?? null, mentality: STRATEGY_MENTALITY[strategy] ?? 'equilibrada', intensity: 'media' },
+    tactics_away: { formation: rival.formation ?? null, mentality: 'equilibrada', intensity: 'media' },
     home: mySquad.map(toEnginePlayer),
     away: rival.players.map(toEnginePlayer),
     n_sims: 1,

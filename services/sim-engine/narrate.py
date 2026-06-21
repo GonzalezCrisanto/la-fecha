@@ -250,6 +250,174 @@ TEMPLATES = {
         "Minutos de revisión y el árbitro ratificó lo que ya había sancionado en campo.",
     ],
 
+    "save_sequence": [
+        "Combinación de pases por el sector derecho, avanza en velocidad, se la da al compañero, queda solo frente al arco… ¡ATAJADA INCREÍBLE de {player}! El arco se salvó de milagro.",
+        "Centro al área, cabecea el delantero… ¡{player} VUELA y la saca con una mano! Intervención de otro mundo.",
+        "Remate cruzado de afuera, bajo y al ángulo… {player} SE ESTIRA y la manda al córner. ¡Qué arquero!",
+        "Contraataque rapidísimo, definición casi cantada… pero {player} anticipó todo y tapó con el pie. ¡Increíble!",
+        "Pelotazo en profundidad, el delantero amaga y remata… ¡ATAJADÓN de {player}! El equipo le debe un punto.",
+        "Centro rasante, el nueve la pica al primer palo… {player} se tira y la saca con la punta de los dedos. Espectacular.",
+        "Tiro libre desde la entrada del área, bien colocado… {player} se lanza y la toca sobre la línea. ¡No entró!",
+        "Córner ejecutado, cabecea al segundo palo… {player} se eleva y la atrapa en el aire. Seguridad total.",
+        "Pelota filtrada, mano a mano inevitable… {player} achica, achica y le tapa el remate. ¡Héroe del arco!",
+        "Volea desde adentro del área, parecía gol… {player} reaccionó en el último instante y la sacó. Magistral.",
+    ],
+
+    "ocasion_sequence": [
+        "{player} avanza por el medio, amaga, tira de afuera… ¡SE VA AFUERA por muy poco! El palo la espera.",
+        "{player} quedó solo, definió cruzado… ¡CONTRA EL PALO! Se salvó el arco rival.",
+        "Centro al área, {player} cabecea sin marca… ¡AFUERA! Se lamentó todo el estadio.",
+        "{player} gambeteó a dos defensores, la acomodó y tiró… ¡Por arriba del travesaño! Estaba hecho ese gol.",
+        "Contraataque, {player} a mano a mano, definió con el pie derecho… ¡AFUERA! Increíble el fallo.",
+        "{player} recibió de espaldas, giró y la pateó al ángulo… el arquero no llegó pero el poste la salvó.",
+        "Remate de volea de {player} desde el borde del área… ¡Altísima! Se fue por las nubes.",
+        "Centro al primer palo, {player} remató de cabeza… ¡El arquero la sacó sobre la línea! Mano a mano con el gol.",
+        "{player} se plantó ante el arco, amago al arquero y definió… ¡Afuera por centímetros! No podía errarla.",
+        "Tiro libre de {player}, bien colocado al ángulo… ¡La madera! El travesaño vibró.",
+    ],
+
+    "corner_sequence": [
+        "Córner ejecutado por {player}, centro al segundo palo, cabecea {header}… ¡DESPEJADO en la línea! Casi.",
+        "Tiro de esquina de {player}, pelota envenenada al primer palo, {header} la toca… ¡AFUERA por poco! Estuvo cerquísima.",
+        "{player} ejecuta el córner, centro preciso, sube {header}… ¡Cabezazo al travesaño! El palo vibró.",
+        "Córner de {player}, pelota que baja al área chica, forcejeo, y la defensa la saca como puede. Qué lío.",
+        "Tiro de esquina de {player}, pelota que se mete directo al arco… ¡El arquero la atrapa en el último momento!",
+        "{player} ejecuta el córner con rosca, la pelota se curva… {header} cabecea pero el arquero la ataja firme.",
+        "Córner de {player}, centro largo al segundo palo, {header} la baja de pecho y remata… ¡Bloqueado por la defensa!",
+        "{player} opta por el córner corto, combina con el compañero, tira desde afuera del área… ¡Se va afuera!",
+        "Tiro de esquina de {player}, pelota al área chica, {header} cabecea… ¡ADENTRO! ¡Gol de córner directo casi!",
+        "Córner de {player}, pelota rebotada en el área, corrida… la defensa la salva antes de que entre.",
+    ],
+
+    "corner_base": [
+        "Córner para {team} a los {min}'. {player} va a ejecutar desde la bandera.",
+        "{team} gana un córner a los {min}'. {player} se acerca al banderín de esquina.",
+        "Tiro de esquina para {team} a los {min}'. {player} coloca la pelota en el arco de esquina.",
+        "Córner a favor de {team} a los {min}'. {player} buscará a los suyos en el área.",
+        "{min}' — Córner. {team} genera otro balón parado peligroso. Lo ejecuta {player}.",
+        "Pelota al córner, saque de esquina para {team} a los {min}'. Ejecuta {player}.",
+    ],
+
+    "corner_sin_gol": [
+        "Córner ejecutado por {player}, centro al segundo palo, cabecea {header}… ¡DESPEJADO en la línea! Casi.",
+        "Tiro de esquina de {player}, pelota envenenada al primer palo, {header} la toca… ¡AFUERA por poco! Estuvo cerquísima.",
+        "{player} ejecuta el córner, centro preciso, sube {header}… ¡Cabezazo al travesaño! El palo vibró.",
+        "Córner de {player}, pelota que baja al área chica, forcejeo, y la defensa la saca como puede. Qué lío en el área.",
+        "Tiro de esquina de {player}, pelota que se mete directo al arco… ¡El arquero la atrapa en el último momento!",
+        "{player} ejecuta el córner con rosca, la pelota se curva… {header} cabecea pero el arquero la ataja firme.",
+        "Córner de {player}, centro largo al segundo palo, {header} la baja de pecho y remata… ¡Bloqueado por la defensa!",
+        "{player} opta por el córner corto, combina con el compañero, tira desde afuera del área… ¡Se va afuera!",
+        "Córner de {player}, pelota al área chica, {header} cabecea… despejado por la defensa sobre la misma línea. ¡De milagro!",
+        "Tiro de esquina de {player}, bola envenenada al área, {header} la toca de cabeza… ¡El arquero la saca de un puñetazo en el aire!",
+    ],
+
+    "gol_de_corner": [
+        "Córner de {corner_taker}, centro preciso al primer palo… cabecea {scorer} y la manda adentro. ¡GOOOOOL! {home_team} {sh} – {sa} {away_team}.",
+        "Tiro de esquina de {corner_taker}, pelota al segundo palo… {scorer} sube más alto que todos y la clava en el ángulo. ¡GOL DE CABEZA! {home_team} {sh} – {sa} {away_team}.",
+        "{corner_taker} ejecuta el córner con rosca, la pelota baja picada al área chica… y {scorer} la empuja adentro. ¡GOOOOL! Qué golazo de pelota parada. {home_team} {sh} – {sa} {away_team}.",
+        "Córner de {corner_taker}, centro envenenado, forcejeo en el área… {scorer} la toca de cabeza y la pelota se mete al ángulo. ¡GOOOOOL! {home_team} {sh} – {sa} {away_team}.",
+        "Saque de esquina ejecutado por {corner_taker}, pelota que envenena el área… ¡{scorer} apareció en el segundo palo y no perdonó! GOL. {home_team} {sh} – {sa} {away_team}.",
+        "{corner_taker} coloca el córner perfecto, la pelota cae en el área chica… {scorer} de cabeza, sin marca, ¡ADENTRO! El estadio explota. {home_team} {sh} – {sa} {away_team}.",
+        "Córner rasante de {corner_taker}, {scorer} se anticipa al arquero… ¡GOL! De cabeza, al primer palo. Exquisito. {home_team} {sh} – {sa} {away_team}.",
+        "Centro al área de {corner_taker} desde el córner, cabecea {scorer}… ¡LA PELOTA ENTRA! ¡GOL DE PELOTA DETENIDA! {home_team} {sh} – {sa} {away_team}.",
+    ],
+
+    "gol_de_tiro_libre": [
+        "Tiro libre para {team} en zona peligrosa a los {min}'. {scorer} pone la pelota… amaga… ¡LA CLAVÓ EN EL ÁNGULO! Arquero sin chances. {home_team} {sh} – {sa} {away_team}.",
+        "Falta en zona de peligro. {scorer} se prepara para ejecutar el tiro libre a los {min}'… ¡GOOOOL! La pelota pasó por encima de la barrera y entró sin tocar el palo. {home_team} {sh} – {sa} {away_team}.",
+        "{scorer} al tiro libre a los {min}'… la curva, la potencia… ¡GOOOOOL! El arquero ni la vio. Que tiro impresionante. {home_team} {sh} – {sa} {away_team}.",
+        "¡GOLAZO DE TIRO LIBRE de {scorer} a los {min}'! La barrera saltó de un lado, la pelota fue al otro. El arquero se quedó clavado. {home_team} {sh} – {sa} {away_team}.",
+        "Silencio en el estadio. {scorer} coloca la pelota, toma distancia… corre… ¡BOOM! En el ángulo superior. Golazo de tiro libre a los {min}'. {home_team} {sh} – {sa} {away_team}.",
+        "Tiro libre a los {min}' para {team}. {scorer} amaga con un compañero, pide silencio al estadio… ¡LA MANDA AL FONDO! Magistral. {home_team} {sh} – {sa} {away_team}.",
+        "{scorer} enfrenta el tiro libre a los {min}', la barrera levanta… él la pica por abajo. ¡El arquero no llegó! ¡GOL! {home_team} {sh} – {sa} {away_team}.",
+        "Falta cobrada por {scorer} a los {min}'. La pelota pasó rasante por encima de la barrera… ¡GOOOOOL! No hay palabras para describir esa pelota. {home_team} {sh} – {sa} {away_team}.",
+    ],
+
+    "tiro_libre_peligroso": [
+        "Tiro libre de {scorer} a los {min}'… la barrera salta y bloquea el disparo. ¡La defensa la salvó!",
+        "{scorer} ejecuta el tiro libre a los {min}', busca el ángulo… ¡ATAJADA INCREÍBLE del arquero! Se lució el guardameta.",
+        "Libre directo de {scorer} a los {min}'… ¡AL TRAVESAÑO! La madera lo salvó. ¡Qué cerca estuvo!",
+        "{scorer} a los {min}', apunta al ángulo… ¡SE FUE AFUERA por centímetros! El equipo se lamenta.",
+        "Tiro libre de {scorer} a los {min}', la pelota pega en la barrera y sale al córner. Saque de esquina.",
+        "{scorer} ejecuta el libre directo a los {min}'… el arquero vuela y la manda al palo. ¡Qué tapada!",
+        "Libre desde zona peligrosa, {scorer} a los {min}'… la barrera despeja de cabeza. Buen trabajo defensivo.",
+        "{scorer} apunta al ángulo superior a los {min}'… ¡AL PALO! La pelota salió despejada. Estuvo.",
+    ],
+
+    "falta_normal": [
+        "Falta de {player} ({team}) a los {min}'. El árbitro la cobra y el juego se detiene brevemente.",
+        "{player} ({team}) comete una infracción a los {min}'. Tiro libre indirecto para los rivales.",
+        "A los {min}' el árbitro frena el juego. Falta de {player} ({team}). El juego se reanuda rápido.",
+        "Infracción de {player} ({team}) a los {min}'. El árbitro cobra la falta y el partido sigue.",
+        "{min}' — Falta de {player} ({team}). Sencilla, sin mayores consecuencias. El partido continúa.",
+        "El árbitro para el juego a los {min}'. Falta de {player} ({team}), el equipo rival coloca la pelota.",
+    ],
+
+    "falta_peligrosa_anuncio": [
+        "¡Falta en zona de peligro a los {min}'! {team} tiene un tiro libre en posición ideal.",
+        "El árbitro cobra falta a los {min}'. ¡Zona peligrosa para {team}! Se viene un disparo al arco.",
+        "{min}' — Infracción dentro de los 25 metros. {team} tiene un tiro libre peligroso.",
+        "Falta cobrada a los {min}' en zona caliente. {team} tiene una chance de oro con pelota detenida.",
+    ],
+
+    "penal_a_favor": [
+        "¡PENAL para {team}! El árbitro no dudó: mano en el área a los {min}'. {player} va a patear.",
+        "¡PENAL! Falta sobre el delantero dentro del área a los {min}'. {player} toma la pelota.",
+        "El árbitro señala el punto del penal a los {min}' en favor de {team}. Va {player}.",
+        "¡Penal para {team} a los {min}'! La entrada fue adentro del área, no había dudas. Patea {player}.",
+        "¡Cobran penal! {team} tiene la chance de abrir el marcador a los {min}'. {player} al punto.",
+        "El VAR revisó y confirmó: penal para {team} a los {min}'. {player} enfrenta al arquero.",
+    ],
+
+    "penal_convertido": [
+        "¡GOOOOOL de penal! {player} la pateó al ángulo y el arquero no llegó. Frialdad total.",
+        "¡Gol de {player} desde los doce pasos! Esquina baja, imparable. ¡Se lo merecía el equipo!",
+        "Penal convertido por {player} a los {min}'. Tiro cruzado, arquero volando al lado.",
+        "¡{player} no perdonó desde el punto del penal! La pelota fue al ángulo y entró limpia.",
+        "¡Golazo de penal de {player}! Pausa, amague y la puso donde el arquero no llegó. Maestro.",
+        "{player} tomó carrera, definió al centro mientras el arquero se tiraba… ¡Adentro! Calidad.",
+    ],
+
+    "penal_fallado": [
+        "¡ATAJÓ EL ARQUERO! {player} pateó al centro, el guardameta se quedó y la sacó. ¡Qué tapada!",
+        "¡AFUERA el penal de {player}! El tiro se fue rozando el poste. Una pesadilla.",
+        "¡El palo! {player} pateó a un lado, el arco se cerró y la madera la salvó. Increíble.",
+        "Penal fallado por {player} a los {min}'. El arquero adivinó la esquina y voló a sacarla.",
+        "¡Que se lamente {player}! La pelota pegó en el travesaño y salió. El estadio en silencio.",
+        "{player} se paró ante el penal, pateó… ¡el arquero la sacó con la pierna! ¡Qué locura!",
+    ],
+
+    "var_anulado": [
+        "¡GOOOOOL de {player}! El estadio explota… pero el VAR frena todo. Revisión en curso.",
+        "¡Gol de {player}! Festejo en el área… pero el árbitro espera el VAR. Hay algo irregular.",
+        "¡La pelota entró! {player} la empujó y festejó… pero el central va al monitor. Cuidado.",
+    ],
+
+    "var_anulado_razon_offside": [
+        "¡Offside! El VAR detectó posición adelantada en el arranque de la jugada. El gol no vale. Silencio en el estadio.",
+        "La línea del VAR es implacable: {player} estaba habilitado por centímetros… pero no, estaba adelantado. Gol anulado.",
+        "Revisión milimétrica y el VAR dice offside. El festejo quedó en la nada. Así es el fútbol moderno.",
+    ],
+
+    "var_anulado_razon_mano": [
+        "¡Mano en el área! El VAR detectó contacto involuntario en el desarrollo de la jugada. Gol anulado.",
+        "El VAR encontró la mano: en la jugada previa al gol, hubo contacto con el brazo. Se anula.",
+        "Mano de jugador en la construcción del gol. El árbitro fue al monitor y no tuvo dudas: no es gol.",
+    ],
+
+    "var_anulado_razon_falta": [
+        "Falta en el origen de la jugada: hubo empujón antes del gol. El VAR lo vio todo. Gol anulado.",
+        "El VAR detectó una falta en el inicio de la jugada. El árbitro anuló el gol tras revisar el monitor.",
+        "Contacto irregular previo: el VAR encontró la infracción que el árbitro no había visto. No es gol.",
+    ],
+
+    "var_anulado_reaccion": [
+        "El estadio que festejaba ahora protesta. Los jugadores increédulos. Así es el VAR.",
+        "La tribuna enloquece de bronca. El fútbol de hoy en día tiene estas cosas.",
+        "Los jugadores del equipo se miran sin entender. Los del otro festejan con mesura. Raro todo.",
+        "El banco técnico eleva el reclamo pero el árbitro es claro: la decisión está tomada.",
+    ],
+
     "pitazo_final": [
         "¡Pitazo final! El árbitro da por concluido el encuentro. "
         "Resultado definitivo: {home_team} {sh} – {sa} {away_team}.",
@@ -284,6 +452,10 @@ TYPE_TAG = {
     "pitazo_final":   "  FINAL  ",
     "figura":         "  FIGURA ",
     "resumen":        " RESUMEN ",
+    "falta":          "  FALTA  ",
+    "penal":          "  PENAL  ",
+    "var_anulado":    "VAR(ANUL)",
+    "corner_outcome": "CRN-OUT  ",
 }
 
 
@@ -347,19 +519,52 @@ def synthesize_extra_events(rep_match, rng, start_minute=1, end_minute=90):
                 "minute": free_minute(lo=15, hi=85),
             })
 
-    # Córners (3-6 por equipo, ejecutados por mediocampistas o delanteros)
+    # Córners (3-8 por equipo, ejecutados por mediocampistas o delanteros)
+    # Corner goals (source == "corner") get their own dedicated corner event at the same minute
+    # so the narration can handle them with gol_de_corner template.
     for side in ("home", "away"):
         executors = [p for p in rep_match[side]
                      if p["position"] in ("MED", "DEL") and p.get("name")]
+        headers = [p for p in rep_match[side]
+                   if p["position"] in ("DEF", "MED", "DEL") and p.get("name")]
         if not executors:
             continue
-        n_corners = rng.randint(1, 3)
+
+        # Collect corner goals for this side
+        corner_goals = [
+            ev for ev in rep_match.get("events", [])
+            if ev.get("type") == "goal" and ev.get("side") == side
+            and ev.get("source") == "corner"
+        ]
+
+        # Generate a dedicated corner event for each corner goal at the SAME minute
+        # (goal event sorts before corner event, updates sh/sa first)
+        for cg in corner_goals:
+            taker = cg.get("corner_taker") or (rng.choice(executors)["name"] if executors else "")
+            events.append({
+                "side":         side,
+                "type":         "corner",
+                "player":       taker,
+                "header":       cg["player"],
+                "minute":       cg["minute"],  # same minute as goal so score is already updated
+                "outcome_type": "goal",
+                "is_goal":      True,
+                "scorer":       cg["player"],
+                "corner_taker": taker,
+            })
+
+        # Synthetic (non-goal) corners: 3-8 per team
+        n_corners = rng.randint(3, 8)
+        outcomes = ["header_saved", "header_wide", "cleared", "deflection", "scramble"]
         for _ in range(n_corners):
             events.append({
-                "side":   side,
-                "type":   "corner",
-                "player": rng.choice(executors)["name"],
-                "minute": free_minute(),
+                "side":         side,
+                "type":         "corner",
+                "player":       rng.choice(executors)["name"],
+                "header":       rng.choice(headers)["name"] if headers else "",
+                "minute":       free_minute(),
+                "outcome_type": rng.choice(outcomes),
+                "is_goal":      False,
             })
 
     # Offsides (1-3 por equipo, solo delanteros)
@@ -379,6 +584,109 @@ def synthesize_extra_events(rep_match, rng, start_minute=1, end_minute=90):
                     "minute": free_minute(),
                 })
 
+    # Faltas (2-5 por equipo, con zona tagging)
+    for side in ("home", "away"):
+        foulers = [p for p in rep_match[side]
+                   if p.get("fouls", 0) > 0 and p.get("name")]
+        if not foulers:
+            foulers = [p for p in rep_match[side]
+                       if p["position"] in ("DEF", "MED") and p.get("name")]
+        if not foulers:
+            continue
+
+        # Free kick goals for this side's opponents (the team that benefits from fouls against this side)
+        opp_side = "away" if side == "home" else "home"
+        fk_goals = [
+            ev for ev in rep_match.get("events", [])
+            if ev.get("type") == "goal" and ev.get("side") == opp_side
+            and ev.get("source") == "free_kick"
+        ]
+
+        n_fouls = rng.randint(2, 5)
+        fk_goals_used = set()  # track which fk goals already got a foul event
+
+        for _ in range(n_fouls):
+            fouler = rng.choice(foulers)
+            is_danger = rng.random() < 0.35
+
+            if is_danger:
+                # Check if any unused free_kick goal exists
+                linked_goal = None
+                for fkg in fk_goals:
+                    if id(fkg) not in fk_goals_used:
+                        linked_goal = fkg
+                        fk_goals_used.add(id(fkg))
+                        break
+
+                if linked_goal:
+                    # Foul at the goal's minute (goal sorts after, updates sh/sa)
+                    events.append({
+                        "side":           side,
+                        "type":           "falta",
+                        "player":         fouler["name"],
+                        "minute":         linked_goal["minute"],
+                        "zone":           "danger",
+                        "free_kick_type": "to_goal",
+                        "fk_scorer":      linked_goal["player"],
+                        "fk_minute":      linked_goal["minute"],
+                    })
+                else:
+                    events.append({
+                        "side":           side,
+                        "type":           "falta",
+                        "player":         fouler["name"],
+                        "minute":         free_minute(),
+                        "zone":           "danger",
+                        "free_kick_type": "no_goal",
+                    })
+            else:
+                events.append({
+                    "side":   side,
+                    "type":   "falta",
+                    "player": fouler["name"],
+                    "minute": free_minute(),
+                    "zone":   "normal",
+                })
+
+    return events
+
+
+def synthesize_var_cancelled(rep_match, rng, start_minute=1, end_minute=90):
+    """
+    Genera 0-2 goles fantasmas anulados por VAR (puramente narrativos, no afectan el marcador).
+    """
+    events = []
+    n = rng.randint(0, 2)
+    used_mins = {ev.get("minute", 0) for ev in rep_match.get("events", [])}
+
+    def free_minute(lo, hi):
+        for _ in range(20):
+            m = rng.randint(lo, hi)
+            if m not in used_mins:
+                used_mins.add(m)
+                return m
+        m = rng.randint(lo, hi)
+        used_mins.add(m)
+        return m
+
+    reasons = ["offside", "mano", "falta"]
+    for _ in range(n):
+        side = rng.choice(["home", "away"])
+        players = [p for p in rep_match[side]
+                   if p["position"] in ("DEL", "MED") and p.get("name")]
+        if not players:
+            players = [p for p in rep_match[side] if p.get("name")]
+        if not players:
+            continue
+        player = rng.choice(players)
+        minute = free_minute(start_minute + 5, end_minute - 5)
+        events.append({
+            "side":   side,
+            "type":   "var_anulado",
+            "player": player["name"],
+            "reason": rng.choice(reasons),
+            "minute": minute,
+        })
     return events
 
 
@@ -468,6 +776,7 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
     # Eventos del motor + sintéticos (respetan la ventana de tiempo)
     events = list(rep_match.get("events", []))
     events += synthesize_extra_events(rep_match, rng, start_minute, end_minute)
+    events += synthesize_var_cancelled(rep_match, rng, start_minute, end_minute)
     events.sort(key=lambda e: e.get("minute", 0))
 
     # Resolve minute collisions: nudge forward, but cap at end_minute and
@@ -526,6 +835,18 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
                 sh += 1
             else:
                 sa += 1
+
+            # Penalty goals are narrated by the "penal" event; skip duplicate narration
+            if ev.get("_penalty"):
+                continue
+
+            # Corner and free kick goals: score updated above, narration handled by
+            # the corner/falta event that comes right after (same minute, stable sort)
+            goal_source = ev.get("source", "open_play")
+            if goal_source == "corner":
+                continue
+            if goal_source == "free_kick":
+                continue
 
             scorer   = ev.get("player", "")
             assister = ev.get("assister")
@@ -600,22 +921,44 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
             player = ev.get("player", "")
             narration.append({
                 "minuto": minute, "tipo": "atajada", "side": side, "player": player,
-                "texto":  pick("save", player=player, min=minute),
+                "texto":  pick("save_sequence", player=player, min=minute),
             })
 
         elif ev_type == "bigChanceMissed":
             player = ev.get("player", "")
             narration.append({
                 "minuto": minute, "tipo": "ocasion_errada", "side": side, "player": player,
-                "texto":  pick("bigChanceMissed", player=player, min=minute),
+                "texto":  pick("ocasion_sequence", player=player, min=minute),
             })
 
         elif ev_type == "corner":
             player = ev.get("player", "")
-            narration.append({
-                "minuto": minute, "tipo": "corner", "side": side, "player": player,
-                "texto":  pick("corner", player=player, team=team, min=minute),
-            })
+            header = ev.get("header", player)
+            if ev.get("is_goal"):
+                scorer = ev.get("scorer", header)
+                corner_taker = ev.get("corner_taker", player)
+                texto = pick("gol_de_corner",
+                             scorer=scorer, corner_taker=corner_taker, min=minute,
+                             home_team=home_team, away_team=away_team, sh=sh, sa=sa)
+                narration.append({
+                    "minuto": minute, "tipo": "gol", "side": side, "player": scorer,
+                    "texto":  texto,
+                })
+                # VAR review post-gol (20% de probabilidad)
+                if rng.random() < 0.20:
+                    narration.append({
+                        "minuto": minute + 1, "tipo": "var", "side": side,
+                        "texto":  pick("var_gol"),
+                    })
+            else:
+                # Base announcement + outcome sequence
+                base_text = pick("corner_base", player=player, team=team, min=minute)
+                outcome_text = pick("corner_sin_gol", player=player, header=header)
+                full_text = base_text + " " + outcome_text
+                narration.append({
+                    "minuto": minute, "tipo": "corner", "side": side, "player": player,
+                    "texto":  full_text,
+                })
 
         elif ev_type == "offside":
             player = ev.get("player", "")
@@ -623,6 +966,69 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
                 "minuto": minute, "tipo": "offside", "side": side, "player": player,
                 "texto":  pick("offside", player=player, team=team, min=minute),
             })
+
+        elif ev_type == "penal":
+            player = ev.get("playerName", ev.get("player", ""))
+            converted = ev.get("converted", False)
+            ann_text = pick("penal_a_favor", player=player, team=team, min=minute)
+            if converted:
+                result_text = pick("penal_convertido", player=player, min=minute)
+            else:
+                result_text = pick("penal_fallado", player=player, min=minute)
+            full_text = ann_text + " " + result_text
+            narration.append({
+                "minuto": minute, "tipo": "penal", "side": side, "player": player,
+                "converted": converted,
+                "texto":  full_text,
+            })
+
+        elif ev_type == "var_anulado":
+            player = ev.get("player", "")
+            reason = ev.get("reason", "offside")
+            ann_text = pick("var_anulado", player=player)
+            reason_key = f"var_anulado_razon_{reason}"
+            reason_text = pick(reason_key, player=player)
+            reaction_text = pick("var_anulado_reaccion")
+            full_text = ann_text + " " + reason_text + " " + reaction_text
+            narration.append({
+                "minuto": minute, "tipo": "var_anulado", "side": side, "player": player,
+                "texto":  full_text,
+            })
+
+        elif ev_type == "falta":
+            player   = ev.get("player", "")
+            zone     = ev.get("zone", "normal")
+            opp_side = "away" if side == "home" else "home"
+            opp_team = away_team if side == "home" else home_team
+            if zone == "danger":
+                # team commits the foul; opp_team benefits from the free kick
+                ann_text = pick("falta_peligrosa_anuncio", team=opp_team, min=minute)
+                fk_type = ev.get("free_kick_type", "no_goal")
+                if fk_type == "to_goal":
+                    scorer = ev.get("fk_scorer", player)
+                    fk_min = ev.get("fk_minute", minute)
+                    result_text = pick("gol_de_tiro_libre",
+                                       scorer=scorer, team=opp_team, min=fk_min,
+                                       home_team=home_team, away_team=away_team, sh=sh, sa=sa)
+                    narration.append({
+                        "minuto": minute, "tipo": "gol", "side": opp_side,
+                        "player": scorer, "texto": ann_text + " " + result_text,
+                    })
+                else:
+                    # no-goal: use a forward/mid from the benefiting team as FK taker
+                    fk_candidates = [p for p in rep_match[opp_side]
+                                     if p["position"] in ("DEL", "MED") and p.get("name")]
+                    fk_taker = rng.choice(fk_candidates)["name"] if fk_candidates else opp_team
+                    result_text = pick("tiro_libre_peligroso", scorer=fk_taker, min=minute)
+                    narration.append({
+                        "minuto": minute, "tipo": "falta", "side": side, "player": player,
+                        "texto":  ann_text + " " + result_text,
+                    })
+            else:
+                narration.append({
+                    "minuto": minute, "tipo": "falta", "side": side, "player": player,
+                    "texto":  pick("falta_normal", player=player, team=team, min=minute),
+                })
 
     # Entretiempo si todos los eventos fueron ≤45'
     if not half_inserted:
@@ -809,7 +1215,9 @@ def main():
                                        and e.get("player") in ev["texto"]
                                        for e in rep.get("events", [])))
     # Simple check: total goles narrados == rep score
-    goles_narrados = sum(1 for ev in narration if ev["tipo"] == "gol")
+    # Penales convertidos se narran con tipo "penal" (no "gol"), pero sí cuentan al marcador.
+    goles_narrados = sum(1 for ev in narration if ev["tipo"] in ("gol", "gol_en_contra")) + \
+                     sum(1 for ev in narration if ev["tipo"] == "penal" and ev.get("converted"))
     assert goles_narrados == sh + sa, (
         f"Goles narrados {goles_narrados} ≠ marcador {sh+sa}"
     )

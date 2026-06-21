@@ -1,11 +1,7 @@
 {
   "_note_cards": "yellow_per_foul calibrado para ~1.75 amarillas/equipo/partido (mean_team_fouls≈12.5 × 0.14 ≈ 1.75). Target real LPF: 3-4 totales por partido (~1.5-2 por equipo). red_base_prob 0.0025 → ~0.035 rojas/equipo/partido.",
-  "goals_home_mean": 1.1402,
-  "goals_away_mean": 0.8785,
   "league_avg_goals": 1.0093,
-  "home_factor": 1.0,
-  "away_factor": 1.0,
-  "team_fouls_mean": 12.394,
+  "own_goal_prob": 0.008,
   "team_strengths": {
     "Huracán": {
       "attack_strength": 0.9436,

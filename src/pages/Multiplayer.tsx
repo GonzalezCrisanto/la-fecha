@@ -55,6 +55,7 @@ export default function Multiplayer({ onBack }: Props) {
   const halftimeDataRef = useRef<{
     scoreHome: number; scoreAway: number
     bookedHome: string[]; bookedAway: string[]
+    redCardedHome: string[]; redCardedAway: string[]
   } | null>(null)
 
   const wsUrl = (import.meta.env.VITE_WS_SERVER_URL as string | undefined)
@@ -155,9 +156,15 @@ export default function Multiplayer({ onBack }: Props) {
         const role = roleRef.current
         const data = halftimeDataRef.current
         if (!data) return
-        const canonicalRival: RivalTeam = { name: 'Rival', players: awaySquadRef.current, formation: homeFormationRef.current }
+        const homeSquadST = data.redCardedHome?.length
+          ? homeSquadRef.current.filter(p => !data.redCardedHome.includes(p.name))
+          : homeSquadRef.current
+        const awaySquadST = data.redCardedAway?.length
+          ? awaySquadRef.current.filter(p => !data.redCardedAway.includes(p.name))
+          : awaySquadRef.current
+        const canonicalRival: RivalTeam = { name: 'Rival', players: awaySquadST, formation: homeFormationRef.current }
         callSimEngineSecondHalf(
-          homeSquadRef.current, canonicalRival, seedRef.current,
+          homeSquadST, canonicalRival, seedRef.current,
           homeStrategy, data.scoreHome, data.scoreAway,
           data.bookedHome, data.bookedAway,
           homeFormationRef.current, awayStrategy,
@@ -224,12 +231,14 @@ export default function Multiplayer({ onBack }: Props) {
     htScore: { home: number; away: number },
     bookedHome: string[],
     bookedAway: string[],
+    redHome: string[],
+    redAway: string[],
   ): Promise<MatchEvent[]> {
     const role = roleRef.current
     // Convert from my perspective (home=me) to canonical (home=creator)
     halftimeDataRef.current = role === 'home'
-      ? { scoreHome: htScore.home, scoreAway: htScore.away, bookedHome, bookedAway }
-      : { scoreHome: htScore.away, scoreAway: htScore.home, bookedHome: bookedAway, bookedAway: bookedHome }
+      ? { scoreHome: htScore.home, scoreAway: htScore.away, bookedHome, bookedAway, redCardedHome: redHome, redCardedAway: redAway }
+      : { scoreHome: htScore.away, scoreAway: htScore.home, bookedHome: bookedAway, bookedAway: bookedHome, redCardedHome: redAway, redCardedAway: redHome }
 
     wsRef.current?.send(JSON.stringify({ type: 'halftime_strategy', strategy: chosenStrategy }))
 

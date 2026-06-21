@@ -39,8 +39,6 @@ class Tactics(BaseModel):
     formation: Optional[str] = None
     mentality: str = "equilibrada"
     intensity: str = "media"
-    captain_id: Optional[int] = None
-
 class MatchInput(BaseModel):
     home_team: str
     away_team: str
@@ -48,7 +46,7 @@ class MatchInput(BaseModel):
     tactics_away: Tactics = Tactics()
     home: list[PlayerInput]
     away: list[PlayerInput]
-    n_sims: int = 5_000
+    n_sims: int = 1
     seed: int = 42
 
 class SecondHalfInput(MatchInput):
@@ -65,12 +63,46 @@ def health():
     return {"status": "ok"}
 
 
-_RIVAL_MENTALITIES = ["equilibrada", "ofensiva", "defensiva", "contraataque"]
-_RIVAL_WEIGHTS     = [0.35, 0.25, 0.25, 0.15]
+# ── Bot rival — formación y mentalidad ────────────────────────────────────────
 
-def _rival_mentality(away_team: str, seed: int) -> str:
-    rng = random.Random(seed + hash(away_team) % 10_000)
-    return rng.choices(_RIVAL_MENTALITIES, weights=_RIVAL_WEIGHTS, k=1)[0]
+_FORMATION_TARGETS = {
+    "3-4-3":   (3, 4, 3),
+    "4-3-3":   (4, 3, 3),
+    "3-5-2":   (3, 5, 2),
+    "4-4-2":   (4, 4, 2),
+    "4-2-3-1": (4, 5, 1),
+    "5-3-2":   (5, 3, 2),
+}
+
+def _bot_formation(players: list) -> str:
+    """Deriva la formación óptima del bot a partir de las posiciones del equipo."""
+    from collections import Counter
+    counts = Counter(p.position for p in players)
+    n_def  = counts.get("DEF", 0)
+    n_med  = counts.get("MED", 0)
+    n_del  = counts.get("DEL", 0)
+    best, best_dist = "4-4-2", float("inf")
+    for form, (d, m, f) in _FORMATION_TARGETS.items():
+        dist = abs(n_def - d) + abs(n_med - m) + abs(n_del - f)
+        if dist < best_dist:
+            best_dist, best = dist, form
+    return best
+
+def _bot_second_half_intensity(score_bot: int, score_user: int) -> str:
+    """Adapts the bot's intensity to the scoreline going into the second half."""
+    diff = score_bot - score_user
+    if diff >= 2:  return "baja"   # protecting a comfortable lead
+    if diff <= -2: return "alta"   # desperate, needs goals
+    return "media"
+
+def _bot_second_half_mentality(score_bot: int, score_user: int) -> str:
+    """Adapta la mentalidad del bot al marcador del primer tiempo."""
+    diff = score_bot - score_user
+    if diff >= 2:  return "defensiva"
+    if diff == 1:  return "equilibrada"
+    if diff == 0:  return "equilibrada"
+    if diff == -1: return "ofensiva"
+    return "ultra_ofensiva"
 
 
 @app.post("/simulate")
@@ -85,8 +117,10 @@ def simulate(match: MatchInput):
         return d
 
     tactics_away = match.tactics_away.model_dump()
-    if tactics_away.get("mentality") == "equilibrada":
-        tactics_away["mentality"] = _rival_mentality(match.away_team, match.seed)
+    tactics_away["mentality"]  = "equilibrada"
+    tactics_away["intensity"]  = "media"
+    if tactics_away.get("formation") is None:
+        tactics_away["formation"] = _bot_formation(match.away)
 
     result = simulate_match(
         [to_player(p) for p in match.home],
@@ -126,8 +160,10 @@ def simulate_second_half(match: SecondHalfInput):
         return d
 
     tactics_away = match.tactics_away.model_dump()
-    if tactics_away.get("mentality") == "equilibrada":
-        tactics_away["mentality"] = _rival_mentality(match.away_team, match.seed)
+    tactics_away["mentality"]  = _bot_second_half_mentality(match.score_away, match.score_home)
+    tactics_away["intensity"]  = _bot_second_half_intensity(match.score_away, match.score_home)
+    if tactics_away.get("formation") is None:
+        tactics_away["formation"] = _bot_formation(match.away)
 
     result = simulate_match(
         [to_player(p) for p in match.home],
@@ -141,6 +177,8 @@ def simulate_second_half(match: SecondHalfInput):
         end_minute=90,
         booked_home=match.booked_home,
         booked_away=match.booked_away,
+        ht_score_home=match.score_home,
+        ht_score_away=match.score_away,
     )
 
     rep = result.get("representative_match")

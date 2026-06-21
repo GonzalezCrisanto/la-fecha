@@ -20,7 +20,9 @@ interface Props {
     strategy: GameStrategy,
     htScore: { home: number; away: number },
     bookedHome: string[],
-    bookedAway: string[]
+    bookedAway: string[],
+    redHome: string[],
+    redAway: string[],
   ) => Promise<MatchEvent[]>
   onBack: () => void
   onReplay: () => void
@@ -80,11 +82,13 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
     }
     const bookedHome = firstHalfEvents.filter(e => e.type === 'yellow' && e.side === 'home').map(e => e.playerName)
     const bookedAway = firstHalfEvents.filter(e => e.type === 'yellow' && e.side === 'away').map(e => e.playerName)
+    const redHome    = firstHalfEvents.filter(e => (e.type === 'red' || e.type === 'double_yellow') && e.side === 'home').map(e => e.playerName)
+    const redAway    = firstHalfEvents.filter(e => (e.type === 'red' || e.type === 'double_yellow') && e.side === 'away').map(e => e.playerName)
 
     if (onHalftimeConfirm) {
       setPhase('loading-second-half')
       try {
-        const secondHalfEvents = await onHalftimeConfirm(halfStrategy, htScore, bookedHome, bookedAway)
+        const secondHalfEvents = await onHalftimeConfirm(halfStrategy, htScore, bookedHome, bookedAway, redHome, redAway)
         setAllEvents([...firstHalfEvents, stKickoff, ...secondHalfEvents])
       } catch {
         setSecondHalfError(true)
@@ -97,8 +101,10 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
     if (halfStrategy !== initialStrategy) {
       setPhase('loading-second-half')
       try {
+        const squadST = redHome.length ? squad.filter(p => !redHome.includes(p.name)) : squad
+        const rivalST = redAway.length ? { ...rival, players: rival.players.filter(p => !redAway.includes(p.name)) } : rival
         const secondHalfEvents = await callSimEngineSecondHalf(
-          squad, rival, seed, halfStrategy,
+          squadST, rivalST, seed, halfStrategy,
           htScore.home, htScore.away,
           bookedHome, bookedAway,
           formation,
