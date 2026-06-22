@@ -58,7 +58,7 @@ export const FORMATION_SLOTS: Record<Formation, Record<Position, number>> = {
   '5-3-2':   { ARQ: 1, DEF: 5, MED: 3, DEL: 2 },
 }
 
-export const BUDGET = 400
+export const BUDGET = 300
 
 export const MAX_PER_CLUB = 3
 
