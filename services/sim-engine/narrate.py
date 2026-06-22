@@ -648,6 +648,24 @@ def synthesize_extra_events(rep_match, rng, start_minute=1, end_minute=90):
                     "zone":   "normal",
                 })
 
+        # Guarantee a falta event for every free-kick goal not yet linked.
+        # Without this, goals with source=="free_kick" silently update sh/sa
+        # but produce no narration event, desyncing the frontend score counter.
+        for fkg in fk_goals:
+            if id(fkg) not in fk_goals_used:
+                fk_goals_used.add(id(fkg))
+                fouler = rng.choice(foulers)
+                events.append({
+                    "side":           side,
+                    "type":           "falta",
+                    "player":         fouler["name"],
+                    "minute":         fkg["minute"],
+                    "zone":           "danger",
+                    "free_kick_type": "to_goal",
+                    "fk_scorer":      fkg["player"],
+                    "fk_minute":      fkg["minute"],
+                })
+
     return events
 
 
@@ -973,12 +991,15 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
             ann_text = pick("penal_a_favor", player=player, team=team, min=minute)
             if converted:
                 result_text = pick("penal_convertido", player=player, min=minute)
+                # "gol" so the frontend live-score counter picks it up
+                narration_tipo = "gol"
             else:
                 result_text = pick("penal_fallado", player=player, min=minute)
+                # "atajada" for failed penalties — the keeper is always the reason
+                narration_tipo = "atajada"
             full_text = ann_text + " " + result_text
             narration.append({
-                "minuto": minute, "tipo": "penal", "side": side, "player": player,
-                "converted": converted,
+                "minuto": minute, "tipo": narration_tipo, "side": side, "player": player,
                 "texto":  full_text,
             })
 
