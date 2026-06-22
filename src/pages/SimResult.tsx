@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { ArrowLeft, ArrowRight, Trophy, UsersThree, SmileyMeh, PauseCircle, Lightning, Star, ArrowCounterClockwise, SoccerBall, Flask } from '@phosphor-icons/react'
+import { useState, useEffect, useRef } from 'react'
+import { ArrowLeft, ArrowRight, Trophy, UsersThree, SmileyMeh, PauseCircle, Lightning, Star, ArrowCounterClockwise, SoccerBall, Flask, CaretDown } from '@phosphor-icons/react'
 import type { MatchResult, MatchEvent, EventType } from '../lib/simulation'
 import { callSimEngineSecondHalf } from '../lib/simulation'
 import type { Player, RivalTeam } from '../types'
@@ -38,10 +38,22 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
   const [htScore, setHtScore] = useState({ home: 0, away: 0 })
   const [halfStrategy, setHalfStrategy] = useState<GameStrategy>(initialStrategy)
   const [secondHalfError, setSecondHalfError] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const prevIsDoneRef = useRef(false)
 
   const visibleEvents = allEvents.slice(0, visibleCount)
   const isLive = phase !== 'second' || visibleCount < allEvents.length
   const isDone = phase === 'second' && visibleCount >= allEvents.length
+
+  const motmEvent = allEvents.find(e => e.type === 'motm')
+
+  // Open modal automatically the first time the match finishes
+  useEffect(() => {
+    if (isDone && !prevIsDoneRef.current) {
+      setShowModal(true)
+    }
+    prevIsDoneRef.current = isDone
+  }, [isDone])
 
   const liveMyGoals = visibleEvents.filter(e =>
     (e.type === 'goal' && e.side === 'home') || (e.type === 'own_goal' && e.side === 'away')
@@ -294,56 +306,137 @@ export default function SimResult({ result, rival, squad, seed, initialStrategy,
         </div>
       )}
 
-      {/* Final actions */}
-      {isDone && (
-        <div
-          className="shrink-0 px-4 py-4 border-t flex flex-col gap-2"
-          style={{ background: '#1d2025', borderColor: '#3b4a3d', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
-        >
-          {drew && onPenalties && (
-            <button
-              onClick={onPenalties}
-              className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
-              style={{ background: '#ffde6e', color: '#2a1f00' }}
-            >
-              <SoccerBall weight="bold" size={18} className="inline align-middle" /> Ir a penales <ArrowRight weight="bold" size={18} className="inline align-middle" />
-            </button>
-          )}
-          {!drew && onPenalties && (
-            <button
-              onClick={onPenalties}
-              className="w-full py-3 rounded-xl text-body-sm transition-all text-[#859585]"
-              style={{ background: 'transparent', border: '1px dashed #3b4a3d' }}
-            >
-              <Flask weight="bold" size={18} className="inline align-middle" /> Probar penales
-            </button>
-          )}
-          {remainingAttempts > 0 ? (
-            <button
-              onClick={onReplay}
-              className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
-              style={{ background: '#75ff9e', color: '#003918' }}
-            >
-              <ArrowCounterClockwise weight="bold" size={18} className="inline align-middle" /> Volver a armar equipo
-              <span className="ml-2 text-label-caps opacity-70">
-                ({remainingAttempts} {remainingAttempts === 1 ? 'chance' : 'chances'})
-              </span>
-            </button>
-          ) : (
-            <div
-              className="w-full py-4 rounded-xl text-center text-body-sm text-[#859585]"
-              style={{ background: '#191c21', border: '1px solid #3b4a3d' }}
-            >
-              Sin más chances hoy · Volvé mañana
-            </div>
-          )}
+      {/* FAB to reopen result modal after dismissing */}
+      {isDone && !showModal && (
+        <div className="shrink-0 px-4 py-3 border-t flex justify-center" style={{ background: '#1d2025', borderColor: '#3b4a3d' }}>
           <button
-            onClick={onBack}
-            className="w-full font-bold py-3 rounded-xl text-body-sm transition-all text-[#bacbb9]"
-            style={{ background: 'transparent', border: '1px solid #3b4a3d' }}
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full text-body-sm font-bold transition-all"
+            style={{ background: '#75ff9e22', border: '1px solid #75ff9e', color: '#75ff9e' }}
           >
-            Ir al inicio
+            <Trophy weight="fill" size={16} /> Ver resultado
           </button>
+        </div>
+      )}
+
+      {/* Result modal — slides up when match ends */}
+      {isDone && showModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center"
+          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(2px)' }}
+        >
+          <div
+            className="w-full flex flex-col"
+            style={{
+              maxWidth: '640px',
+              background: '#1d2025',
+              borderTop: '1px solid #3b4a3d',
+              borderRadius: '20px 20px 0 0',
+              paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))',
+            }}
+          >
+            {/* Drag handle + dismiss */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full" style={{ background: '#3b4a3d' }} />
+            </div>
+
+            <div className="px-5 pt-3 pb-5 flex flex-col gap-4">
+              {/* Outcome label */}
+              <p className="text-label-caps font-bold text-center tracking-widest" style={{ color: outcomeColor }}>
+                {outcomeLabel}
+              </p>
+
+              {/* Score */}
+              <div className="flex items-center justify-center gap-8">
+                <div className="text-center">
+                  <p className="text-label-caps text-[#859585] mb-1">VOS</p>
+                  <p className="font-black leading-none" style={{ color: outcomeColor, fontSize: 'clamp(3rem,16vw,5rem)' }}>
+                    {liveMyGoals}
+                  </p>
+                </div>
+                <p className="text-headline-lg text-[#3b4a3d] font-bold mt-4">—</p>
+                <div className="text-center">
+                  <p className="text-label-caps text-[#859585] mb-1 truncate max-w-[8rem]">
+                    {teamDisplayName(rival.name).toUpperCase()}
+                  </p>
+                  <p className="font-black leading-none" style={{ color: isDone && !won && !drew ? '#75ff9e' : '#e1e2ea', fontSize: 'clamp(3rem,16vw,5rem)' }}>
+                    {liveRivalGoals}
+                  </p>
+                </div>
+              </div>
+
+              {/* MOTM */}
+              {motmEvent?.text && (
+                <div
+                  className="rounded-xl px-4 py-3 text-center"
+                  style={{ background: '#2a2500', border: '1px solid #ffde6e33' }}
+                >
+                  <p className="text-label-caps text-[#ffde6e] mb-1"><Star weight="fill" size={12} className="inline align-middle" /> FIGURA DEL PARTIDO</p>
+                  <p className="text-body-sm text-[#e1e2ea]">{motmEvent.text}</p>
+                </div>
+              )}
+
+              {/* Quality */}
+              <div className="flex justify-center gap-6 text-label-caps text-[#859585]">
+                <span><Star weight="fill" size={12} className="inline align-middle" /> Tuya: <span className="text-[#75ff9e]">{result.myOverall}</span>/99</span>
+                <span><Star weight="fill" size={12} className="inline align-middle" /> Rival: <span className="text-[#e1e2ea]">{result.rivalOverall}</span>/99</span>
+              </div>
+
+              {/* Buttons */}
+              {drew && onPenalties && (
+                <button
+                  onClick={onPenalties}
+                  className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
+                  style={{ background: '#ffde6e', color: '#2a1f00' }}
+                >
+                  <SoccerBall weight="bold" size={18} className="inline align-middle" /> Ir a penales <ArrowRight weight="bold" size={18} className="inline align-middle" />
+                </button>
+              )}
+              {!drew && onPenalties && (
+                <button
+                  onClick={onPenalties}
+                  className="w-full py-3 rounded-xl text-body-sm transition-all text-[#859585]"
+                  style={{ background: 'transparent', border: '1px dashed #3b4a3d' }}
+                >
+                  <Flask weight="bold" size={18} className="inline align-middle" /> Probar penales
+                </button>
+              )}
+              {remainingAttempts > 0 ? (
+                <button
+                  onClick={onReplay}
+                  className="w-full font-bold py-4 rounded-xl text-body-lg transition-all electric-glow"
+                  style={{ background: '#75ff9e', color: '#003918' }}
+                >
+                  <ArrowCounterClockwise weight="bold" size={18} className="inline align-middle" /> Volver a armar equipo
+                  <span className="ml-2 text-label-caps opacity-70">
+                    ({remainingAttempts} {remainingAttempts === 1 ? 'chance' : 'chances'})
+                  </span>
+                </button>
+              ) : (
+                <div
+                  className="w-full py-4 rounded-xl text-center text-body-sm text-[#859585]"
+                  style={{ background: '#191c21', border: '1px solid #3b4a3d' }}
+                >
+                  Sin más chances hoy · Volvé mañana
+                </div>
+              )}
+              <button
+                onClick={onBack}
+                className="w-full font-bold py-3 rounded-xl text-body-sm transition-all text-[#bacbb9]"
+                style={{ background: 'transparent', border: '1px solid #3b4a3d' }}
+              >
+                Ir al inicio
+              </button>
+
+              {/* Ver crónica */}
+              <button
+                onClick={() => setShowModal(false)}
+                className="flex items-center justify-center gap-1.5 text-label-caps text-[#859585] hover:text-[#bacbb9] transition-colors mx-auto"
+              >
+                <CaretDown weight="bold" size={14} /> Ver crónica
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -382,6 +475,7 @@ const EVENT_META: Record<EventType, { icon: string; label: (player: string, isHo
   motm:     { icon: '⭐', label: (p) => `Figura: ${p}`,                   highlight: '#2a2500'   },
   kickoff:  { icon: '🔔', label: ()  => '¡Comenzó el partido!',           highlight: '#1d2025'   },
   summary:  { icon: '📋', label: ()  => 'Resumen del partido',             highlight: '#151a1e'   },
+  tension:  { icon: '🔥', label: ()  => 'Momento clave',                  highlight: '#2a1500'   },
 }
 
 function EventRow({ event, isNew }: { event: MatchEvent; isNew: boolean }) {
@@ -393,6 +487,7 @@ function EventRow({ event, isNew }: { event: MatchEvent; isNew: boolean }) {
     || (event.type === 'own_goal' && event.side === 'away')
   const isGlobal = event.type === 'halftime' || event.type === 'fulltime' || event.type === 'motm'
     || event.type === 'kickoff' || event.type === 'summary' || event.type === 'var'
+    || event.type === 'tension'
 
   const minuteLabel = event.type === 'halftime' ? "45'"
     : event.type === 'fulltime' ? "90'+2"

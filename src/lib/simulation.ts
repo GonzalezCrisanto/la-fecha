@@ -3,7 +3,7 @@ import type { Player, RivalTeam } from '../types'
 export type EventType =
   | 'goal' | 'own_goal' | 'save' | 'shot_off' | 'corner' | 'offside' | 'foul'
   | 'yellow' | 'red' | 'double_yellow' | 'var'
-  | 'halftime' | 'fulltime' | 'motm' | 'kickoff' | 'summary'
+  | 'halftime' | 'fulltime' | 'motm' | 'kickoff' | 'summary' | 'tension'
 
 export interface MatchEvent {
   minute: number
@@ -364,6 +364,7 @@ export async function callSimEngine(mySquad: Player[], rival: RivalTeam, seed: n
     figura:         'motm',
     arranque:       'kickoff',
     resumen:        'summary',
+    tension:        'tension',
   }
 
   const events: MatchEvent[] = (data.narration ?? [])
@@ -431,7 +432,7 @@ export async function callSimEngineSecondHalf(
     atajada: 'save', ocasion_errada: 'shot_off',
     corner: 'corner', offside: 'offside', var: 'var',
     entretiempo: 'halftime', pitazo_final: 'fulltime', figura: 'motm',
-    arranque: 'kickoff', resumen: 'summary',
+    arranque: 'kickoff', resumen: 'summary', tension: 'tension',
   }
 
   return (data.narration ?? [])

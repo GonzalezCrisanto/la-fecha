@@ -433,6 +433,41 @@ TEMPLATES = {
         "Se acabó el tiempo reglamentario. La pelota dejó de rodar: "
         "{home_team} {sh} – {sa} {away_team}.",
     ],
+
+    "tension_empate": [
+        "Minuto {min}'. El partido sigue igualado y el reloj no perdona. "
+        "Cualquiera puede ganarlo en estos últimos {left} minutos.",
+        "A {min}' del reloj y el marcador no se mueve. Nervios en las tribunas. "
+        "{home_team} y {away_team} se miran de frente.",
+        "Quedan {left}' y el empate no le sirve a ninguno. El partido entra en zona caliente.",
+        "Minuto {min}'. El estadio contiene el aliento. Empate en el marcador y el tiempo se acaba.",
+        "Se acabó el tiempo para esperar. {left}' quedan y el partido todavía no tiene dueño.",
+    ],
+
+    "tension_ganando_cerca": [
+        "Minuto {min}'. {team} lo tiene arriba por la mínima y ahora tiene que aguantar. "
+        "Quedan {left}'.",
+        "A {min}' del final, {team} defiende la ventaja. El rival aprieta y el resultado "
+        "está en un hilo.",
+        "Quedan {left}' y {team} sufre en el fondo. Un descuido y se va todo.",
+        "{team} sostiene el marcador pero el rival no se rinde. "
+        "Minuto {min}'. Esto puede pasar cualquier cosa.",
+        "Minuto {min}'. {team} quiere cerrar el partido pero el rival no lo deja. "
+        "{left} minutos de puro nervio.",
+    ],
+
+    "tension_perdiendo_cerca": [
+        "Minuto {min}'. Queda poco y {team} necesita el empate como el agua. "
+        "El técnico ya movió el banco.",
+        "A {min}' del final, {team} lo busca con desesperación. El tiempo se acota.",
+        "Minuto {min}'. {team} ataca en bloque. El arquero rival "
+        "está enchufado. Quedan {left}'.",
+        "Quedan {left}' para el milagro. {team} no baja los brazos "
+        "y el estadio los empuja.",
+        "Se viene todo arriba {team}. Quedan {left}' y el partido "
+        "se puede ir en la próxima.",
+    ],
+
 }
 
 # Icono/prefijo por tipo de evento para el texto plano
@@ -456,6 +491,7 @@ TYPE_TAG = {
     "penal":          "  PENAL  ",
     "var_anulado":    "VAR(ANUL)",
     "corner_outcome": "CRN-OUT  ",
+    "tension":        " TENSION ",
 }
 
 
@@ -819,6 +855,7 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
     is_second_half   = start_minute > 1
     half_inserted    = is_second_half  # el descanso ya ocurrió si arrancamos en el ST
     red_teams        = set()          # equipos con expulsados
+    tension_done     = set()          # milestones de tensión ya insertados
     narration        = []
 
     def pick(template_key, **kwargs):
@@ -837,6 +874,26 @@ def generate_narration(rep_match, home_team, away_team, seed=42,
         ev_type = ev.get("type", "")
         side    = ev.get("side", "home")
         team    = home_team if side == "home" else away_team
+
+        # Insertar eventos de tensión en los tramos finales (solo segundo tiempo completo)
+        if end_minute >= 90:
+            for milestone in (75, 82, 88):
+                if milestone not in tension_done and minute > milestone:
+                    tension_done.add(milestone)
+                    diff = sh - sa
+                    left = end_minute - milestone
+                    if diff == 0:
+                        text = pick("tension_empate", min=milestone, left=left,
+                                    home_team=home_team, away_team=away_team)
+                        narration.append({"minuto": milestone, "tipo": "tension", "texto": text})
+                    elif abs(diff) == 1:
+                        winner = home_team if diff > 0 else away_team
+                        loser  = away_team if diff > 0 else home_team
+                        if rng.random() < 0.5:
+                            text = pick("tension_ganando_cerca", min=milestone, left=left, team=winner)
+                        else:
+                            text = pick("tension_perdiendo_cerca", min=milestone, left=left, team=loser)
+                        narration.append({"minuto": milestone, "tipo": "tension", "texto": text})
 
         # Insertar entretiempo si corresponde
         if not half_inserted and minute > 45:
